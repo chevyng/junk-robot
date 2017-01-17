@@ -1,0 +1,32 @@
+<div class="container">
+  <div  [hidden]="submitted">
+    <h1>Hero Form</h1>
+    <form (ngSubmit)="onSubmit()" #heroForm="ngForm">
+
+
+      <div>
+        <label for="codeMirror">Code Mirror</label>
+        <br>
+          <codemirror #codemirror
+           [(ngModel)]="code"
+           [config]="config"
+           id="codemirror"
+           name="codemirror"
+           >
+          </codemirror>
+          <br>
+          <!-- <pre>{{code}}</pre> -->
+      </div>
+
+      <button type="submit" class="btn btn-default" [disabled]="!heroForm.form.valid">Submit</button>
+      <button type="button" class="btn btn-default" (click)="resetForm(); heroForm.reset()">Clear</button>
+      <button type="button" class="btn btn-default" (click)="parseCodeInput(codemirror.value)">Parse</button>
+      <br>
+      <!-- <pre>{{log}}</pre> -->
+    </form>
+  </div>
+
+  <label for="d3-graph">D3Graph</label>
+  <d3-graph></d3-graph>
+
+</div>
