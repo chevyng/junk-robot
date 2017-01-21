@@ -1,7 +1,11 @@
+<label for="d3-graph">D3Graph</label>
+<d3-graph></d3-graph>
+
 <div class="container">
   <div  [hidden]="submitted">
     <h1>Hero Form</h1>
     <form (ngSubmit)="onSubmit()" #heroForm="ngForm">
+
 
 
       <div>
@@ -25,8 +29,5 @@
       <!-- <pre>{{log}}</pre> -->
     </form>
   </div>
-
-  <label for="d3-graph">D3Graph</label>
-  <d3-graph></d3-graph>
 
 </div>

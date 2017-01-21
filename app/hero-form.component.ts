@@ -1,5 +1,6 @@
 import { Component, OnInit, ElementRef, OnChanges, AfterViewInit, ViewChild } from '@angular/core';
 import { Hero }    from './hero';
+import { TestGraphComponent } from './graph.component';
 import 'codemirror/mode/clike/clike';
 import 'codemirror/lib/codemirror';
 import 'codemirror/mode/javascript/javascript';
