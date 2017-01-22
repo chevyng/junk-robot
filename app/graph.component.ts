@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, OnChanges, AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Observable } from 'rxjs/Rx';
 import * as d3 from 'd3';
 
 @Component({
@@ -6,11 +7,13 @@ import * as d3 from 'd3';
   // encapsulation: ViewEncapsulation.None,
   template: `
     <div></div>
-    <button type="button" class="btn btn-default" (click)="animateLeft();"> Turn left </button>
-    <button type="button" class="btn btn-default" (click)="animateRight();"> Turn right </button>
+    <button type="button" class="btn btn-default" (click)="turnLeft();"> Turn left </button>
+    <button type="button" class="btn btn-default" (click)="turnRight();"> Turn right </button>
     <button type="button" class="btn btn-default" (click)="moveForward();"> Move Forward </button>
     <button type="button" class="btn btn-default" (click)="moveBackward();"> Move Backward </button>
+    <button type="button" class="btn btn-default" (click)="test();"> Test Circuit </button>
     <button type="button" class="btn btn-default" (click)="reset();"> Reset </button>
+
 
     `,
   styles: [`
@@ -46,6 +49,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   private xCoord;
   private yCoord;
   private angle = 0;
+  private prevCmd: string;
+  private direction; // 1 = North, 2 = East, 3 = South, 4 = West
 
   private dimension = {
     w: 80,
@@ -67,7 +72,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   ngOnChange() {
-    // this.move();
   }
 
   private setup(): void {
@@ -78,8 +82,9 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.height = h - this.margin.top - this.margin.bottom;
     this.xTick = this.width / 80;
     this.yTick = this.height / 80;
-    this.xCoord = this.width/2;
-    this.yCoord = this.height/2;
+    this.xCoord = this.width / 2;
+    this.yCoord = this.height / 2;
+    this.direction = 1;
   }
 
   private draw(): void {
@@ -123,16 +128,14 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("class", "robot");
 
     this.robot.append("rect")
-      // .attr("x", this.xCoord)
-      // .attr("y", this.yCoord)
       .attr("width", this.dimension.w)
       .attr("height", this.dimension.h)
       .attr("class", "robot");
 
 
     var circleData = [
-      { "cx": (this.dimension.w / 3.5), "cy":  this.dimension.h / 4, "radius": 8 },
-      { "cx": (this.dimension.w - this.dimension.w / 3.5), "cy":  this.dimension.h / 4, "radius": 8 }
+      { "cx": (this.dimension.w / 3.5), "cy": this.dimension.h / 4, "radius": 8 },
+      { "cx": (this.dimension.w - this.dimension.w / 3.5), "cy": this.dimension.h / 4, "radius": 8 }
     ];
 
     var circles = this.robot.selectAll("circle")
@@ -146,55 +149,95 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("r", function(d) { return d.radius; })
       .style("fill", "black");
 
-    this.robot.attr("transform", "translate(" + (this.width/2) + "," + (this.height/2) + ")")
+    this.robot.attr("transform", "translate(" + (this.width / 2) + "," + (this.height / 2) + ")")
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
   }
 
-  private updateRobot(): void {
+  private updateRobot(value: number): void {
+    if (this.angle == 360 || this.angle == -360) {
+      this.angle = 0;
+    }
 
-    this.robot.enter()
-      .append("rect")
-      .attr("x", this.xCoord)
-      .attr("y", this.yCoord)
-      .attr("width", this.dimension.w)
-      .attr("height", this.dimension.h);
+    var currentAngle = this.angle;
+    //Turn right
+    if (value > 0) {
+      this.angle += 90;
+      if (currentAngle == 0) {
+        this.direction = 2;
+      } else if (currentAngle == 90 || currentAngle == -270) {
+        this.direction = 3;
+      } else if (currentAngle == 180 || currentAngle == -180) {
+        this.direction = 4;
+      } else if (currentAngle == 270 || currentAngle == -90) {
+        this.direction = 1;
+      }
+      // if (currentAngle == 0) {
+      //   this.xCoord += 90;
+      //   this.yCoord += 10;
+      // } else if (currentAngle == 90 || currentAngle == -270) {
+      //   this.xCoord -= 10;
+      //   this.yCoord += 90;
+      // } else if (currentAngle == 180 || currentAngle == -180) {
+      //   this.xCoord -= 90;
+      //   this.yCoord -= 10;
+      // } else if (currentAngle == 270 || currentAngle == -90) {
+      //   this.xCoord += 10;
+      //   this.yCoord -= 90;
+      // }
+    } else { // Turn Left
+      this.angle -= 90;
+      if (currentAngle == 0) {
+        this.direction = 4;
+      } else if (currentAngle == 90 || currentAngle == -270) {
+        this.direction = 1;
+      } else if (currentAngle == 180 || currentAngle == -180) {
+        this.direction = 2;
+      } else if (currentAngle == 270 || currentAngle == -90) {
+        this.direction = 3;
+      }
+      //Only add if next command is moveForward/Backward
+      //Don't add if next command is turn if not the coordinates will be wrong
+      // if (currentAngle == 0) {
+      //   this.xCoord -= 90;
+      //   this.yCoord -= 10;
+      // } else if (currentAngle == 90 || currentAngle == -270) {
+      //   this.xCoord += 10;
+      //   this.yCoord -= 90;
+      // } else if (currentAngle == 180 || currentAngle == -180) {
+      //   this.xCoord += 90;
+      //   this.yCoord += 10;
+      // } else if (currentAngle == 270 || currentAngle == -90) {
+      //   this.xCoord -= 10;
+      //   this.yCoord += 90;
+      // }
+    }
 
+    // if (this.angle == 0) {
+    //   //No changes to (x,y)
+    // } else if (this.angle == 90 || this.angle == -270) {
+    //   this.xCoord += 100;
+    //   //No changes to yCoord
+    // } else if (this.angle == 180 || this.angle == -180) {
+    //   this.xCoord += 100;
+    //   this.yCoord += 100;
+    // } else if (this.angle == 270 || this.angle == -90) {
+    //   this.yCoord += 100;
+    // }
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
+    console.log("robot center (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
+    console.log("angle: " + this.angle);
   }
 
-  // animateRight(): void {
-  //   console.log("animate function");
-  //   var rectTransition = this.robot.transition()
-  //                         .duration(3000)
-  //                         .attrTween("transform", tween);
-  //
-  //   var rotate = this.angle;
-  //   var x = this.xCoord;
-  //   var y = this.yCoord;
-  //   function tween() {
-  //     var i = d3.interpolate(rotate, rotate += 90);
-  //     return function(t) {
-  //       return "rotate(" + i(t) + "," + x + "," + y + ")";
-  //     }
-  //   }
-  //   this.angle += 90;
-  //   this.updateRobot();
-  // }
-
-  animateRight(): void {
-    console.log("animate function");
-    // this.angle += 90;
+  private turnRight(): void {
+    console.log("turn function");
+    this.checkPosition();
     var rotate = this.angle;
-    var x = this.xCoord ;
-    var y = this.yCoord ;
-
-    // var rectTransition = this.robot.transition()
-    //                       .duration(2000)
-    //                       .attr("transform", "translate(" + x + "," + y + ")" + "rotate(" + rotate + ",40,50" +")");
+    var x = this.xCoord;
+    var y = this.yCoord;
 
     var rectTransition = this.robot.transition()
-                          .duration(2000)
-                          .attrTween("transform", tween );
+      .duration(1000)
+      .attrTween("transform", tween);
 
     function tween() {
       var i = d3.interpolate(rotate, rotate += 90);
@@ -202,19 +245,19 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         return "translate(" + x + "," + y + ") rotate(" + i(t) + "," + 40 + "," + 50 + ")";
       }
     }
-    this.angle += 90;
-    this.updateRobot();
+    this.updateRobot(90);
+    this.prevCmd = "turnRight";
   }
 
-  animateLeft(): void {
-    console.log("animate function");
-    // this.angle -= 90;
+  private turnLeft(): void {
+    console.log("turn function");
+    this.checkPosition();
     var rotate = this.angle;
-    var x = this.xCoord ;
-    var y = this.yCoord ;
+    var x = this.xCoord;
+    var y = this.yCoord;
     var rectTransition = this.robot.transition()
-                          .duration(2000)
-                          .attrTween("transform", tween );
+      .duration(1000)
+      .attrTween("transform", tween);
 
     function tween() {
       var i = d3.interpolate(rotate, rotate -= 90);
@@ -222,52 +265,109 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         return "translate(" + x + "," + y + ") rotate(" + i(t) + "," + 40 + "," + 50 + ")";
       }
     }
-    this.angle -= 90;
-    this.updateRobot();
+    this.updateRobot(-90);
+    this.prevCmd = "turnLeft";
   }
 
   reset(): void {
     console.log("reset function");
     this.angle = 0;
-    //   this.robot.select("rect")
-    //     .transition()
-    //     .attr("transform", "translate(0)")
-    //     .attr("x", this.width / 2)
-    //     .attr("y", this.height - 100);
-    // }
+    this.direction = 1;
+    this.robot.attr("transform", "translate(" + (this.width / 2) + "," + (this.height / 2) + ")")
+    this.xCoord = this.width / 2;
+    this.yCoord = this.height / 2;
+  }
 
-    this.robot.select("rect")
-      .transition()
-      .duration(4000)
-      .attrTween("transform", tween);
+  private move(): void {
+    this.robot.transition()
+      .attr("transform", "translate(" + this.xCoord + "," + this.yCoord + ") rotate(" + this.angle + ")")
+      .duration(1000);
+  }
 
-    function tween() {
-      var i = d3.interpolate(90, 0);
-      return function(t) {
-        return "rotate(" + i(t) + ",520,490)";
+  private moveBackward(value: number): void {
+    if (this.angle == 0) {
+      this.yCoord += 100;
+    } else if (this.angle == 90 || this.angle == -270) {
+      this.xCoord -= 100;
+    } else if (this.angle == 180 || this.angle == -180) {
+      this.yCoord -= 100;
+    } else if (this.angle == 270 || this.angle == -90) {
+      this.xCoord += 100
+    }
+
+    if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
+      if (this.direction == 2) {
+        this.xCoord += 90;
+        this.yCoord += 10;
+      } else if (this.direction == 3) {
+        this.xCoord += 80;
+        this.yCoord += 100;
+      } else if (this.direction == 4) {
+        this.xCoord -= 10;
+        this.yCoord += 90;
       }
+    }
+    this.move();
+    this.prevCmd = "moveBackward";
+  }
+
+  private moveForward(value: number): void {
+    if (this.direction == 1) {
+      this.yCoord -= 100;
+    } else if (this.angle == 90 || this.angle == -270) {
+      this.xCoord += 100;
+    } else if (this.angle == 180 || this.angle == -180) {
+      this.yCoord += 100;
+    } else if (this.angle == 270 || this.angle == -90) {
+      this.xCoord -= 100
+    }
+
+    if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
+      if (this.angle == 90 || this.angle == -270) {
+        this.xCoord += 90;
+        this.yCoord += 10;
+      } else if (this.angle == 180 || this.angle == -180) {
+        this.xCoord += 80;
+        this.yCoord += 100;
+      } else if (this.angle == 270 || this.angle == -90) {
+        this.xCoord -= 10;
+        this.yCoord += 90;
+      }
+
+    }
+    console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
+    console.log("robot center (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
+    console.log("angle: " + this.angle + " direction = " + this.direction );
+    this.move();
+    this.prevCmd = "moveForward";
+  }
+
+ //Problem is after moving forward or backward when facing ESW
+ //The coordinates are not accurate due to the added coordinates
+ //that was added when the robot was facing either E/S/W
+// When facing East, extra (90,10) was added
+  private checkPosition(): void {
+    if( (this.prevCmd == "moveForward" || this.prevCmd == "moveBackward")
+        && this.direction == 2 ){ // East
+      this.xCoord -= 90;
+      this.yCoord -= 10;
+    } else if( (this.prevCmd == "moveForward" || this.prevCmd == "moveBackward")
+        && this.direction == 3 ){ // South
+      this.xCoord -= 80;
+      this.yCoord -= 100;
+    } else if( (this.prevCmd == "moveForward" || this.prevCmd == "moveBackward")
+        && this.direction == 4 ){ // West
+      this.xCoord += 10;
+      this.yCoord -= 90;
     }
   }
 
-  moveForward(): void {
-    // this.robot.transition()
-    //   .attr("transform", "translate(0,-200)")
-    //   .duration(2000);
-    this.yCoord += 100;
-    this.updateRobot();
-
-      this.robot.transition()
-        .attr("transform","translate(" + this.xCoord + "," + this.yCoord + ") rotate(" + this.angle + ")")
-        .duration(500);
-  }
-
-  moveBackward(yValue: number): void {
-    this.yCoord -= 100;
-    this.updateRobot();
-
-    this.robot.transition()
-      .attr("transform", "translate(" + this.xCoord + "," + this.yCoord + ") rotate(" + this.angle + ")")
-      .duration(500);
-
-
+  test(): void {
+    this.moveForward();
+    setTimeout(() => { this.turnRight(); }, 1000);
+    setTimeout(() => { this.moveForward(); }, 2000);
+    setTimeout(() => { this.turnRight(); }, 3000);
+    setTimeout(() => { this.moveForward(); }, 4000);
+    setTimeout(() => { this.turnRight(); }, 5000);
+    setTimeout(() => { this.moveForward(); }, 6000);
   }
