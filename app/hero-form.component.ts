@@ -5,11 +5,7 @@ import 'codemirror/mode/clike/clike';
 import 'codemirror/lib/codemirror';
 import 'codemirror/mode/javascript/javascript';
 
-var sampleCode = `// Some js code...
-if (true) {
-  console.log('hello world');
-}
-
+var sampleCode = `// Junk robot PXT JS code...
 let robot: junkrobot.Robot = null
 robot = junkrobot.createRobot(junkrobot.createMotor(
     DigitalPin.P0,
@@ -23,14 +19,16 @@ robot = junkrobot.createRobot(junkrobot.createMotor(
         DigitalPin.P0
     ))
 for (let i = 0; i < 4; i++) {
-    robot.moveForward(1000)
-    robot.turnLeft(90)
-    robot.turnLeft(900)
-    robot.turnLeft(9000)
-    robot.turnLeft(90000)
-    robot.turnRight(90)
-    robot.moveBackward(2000)
-    robot.turnRight(180)
+    robot.moveForward(125)
+    robot.turnLeft()
+    robot.moveForward(250)
+    robot.turnRight()
+    robot.moveForward(250)
+    robot.turnRight()
+    robot.moveForward(375)
+    robot.turnRight()
+    robot.moveForward(250)
+    robot.moveBackward(125)
 }
 `;
 
@@ -40,7 +38,10 @@ for (let i = 0; i < 4; i++) {
   templateUrl: 'hero-form.component.html'
 })
 export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
+  @ViewChild(TestGraphComponent) graph:TestGraphComponent;
 
+  private totalTime = 0;
+  private stack: string[] = new Array();
   config = {
     lineNumbers: true,
     mode: {
@@ -59,14 +60,16 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
 
   log = '';
   parseCodeInput(value: string): void {
-    let stack: string[] = new Array();
+    // let stack: string[] = new Array();
     var arrayofLines = value.split("\n");
     var leftCount = 0;
+    this.stack = []; // Clear array
+    this.totalTime = 0; // Clear timing
     console.log("Num of line break = " + arrayofLines.length);
     for (var i = 0; i < arrayofLines.length; i++) {
       this.log += `Line${i}: `;
       this.log += `${arrayofLines[i]}\n`;
-      determineCmd(arrayofLines[i], stack);
+      this.determineCmd(arrayofLines[i], this.stack);
       if (arrayofLines[i].match(/turnLeft/g) != null) {
         var strValue = arrayofLines[i]
           .substr((arrayofLines[i].indexOf("(") + 1));
@@ -76,33 +79,71 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
     // console.log("Num of left turn: " + leftCount);
-    console.log("Num of command: " + stack.length);
-    for(var i=0; i<stack.length; i++){
-        console.log("command["+ i + "]: " + stack[i]);
+    console.log("Num of command: " + this.stack.length);
+    // for(var i=0; i<this.stack.length; i++){
+    //     console.log("command["+ i + "]: " + this.stack[i]);
+    // }
+  }
+
+  testFunc(): void{
+    console.log("Test Function");
+    for(var i=0; i<this.stack.length; i++){
+      console.log("command["+ i + "]: " + this.stack[i]);
+      eval(this.stack[i]);
     }
   }
 
-  function determineCmd(line: string, cmdStack: string[]): void {
+  private determineCmd(line: string, cmdStack: string[]): void {
       var value;
+      var cmdStringStart = "setTimeout(() => { this.graph.";
+      var cmdStringEnd = "; }, ";
+      var turnTiming = 1000;
+      // if (line.match(/turnLeft/g) != null) {
+      //   value = line.substr( (line.indexOf("(") + 1) );
+      //   value = value.slice(0, value.indexOf(")"));
+      //   cmdStack.push("turnLeft(" + value + ")");
+      // } else if (line.match(/turnRight/g) != null) {
+      //   value = line.substr( (line.indexOf("(") + 1) );
+      //   value = value.slice(0, value.indexOf(")"));
+      //   cmdStack.push("turnRight(" + value + ")");
+      // } else if (line.match(/moveForward/g) != null) {
+      //   value = line.substr( (line.indexOf("(") + 1) );
+      //   value = value.slice(0, value.indexOf(")"));
+      //   cmdStack.push("moveForward(" + value + "," + (value/1000) + ")");
+      // } else if (line.match(/moveBackward/g) != null) {
+      //   value = line.substr( (line.indexOf("(") + 1) );
+      //   value = value.slice(0, value.indexOf(")"));
+      //   cmdStack.push("moveBackward(" + value + "," + (value/1000) + ")");
+      // }
+
       if (line.match(/turnLeft/g) != null) {
         value = line.substr( (line.indexOf("(") + 1) );
         value = value.slice(0, value.indexOf(")"));
-        cmdStack.push("left." + value);
+        // setTimeout(() => { this.graph.turnLeft(); }, 1000);
+        cmdStack.push(cmdStringStart + "turnLeft()" + cmdStringEnd + this.totalTime + ");" );
+        this.totalTime+=turnTiming;
       } else if (line.match(/turnRight/g) != null) {
         value = line.substr( (line.indexOf("(") + 1) );
         value = value.slice(0, value.indexOf(")"));
-        cmdStack.push("right." + value);
+        cmdStack.push(cmdStringStart + "turnRight()" + cmdStringEnd + this.totalTime + ");" );
+        this.totalTime+=turnTiming;
       } else if (line.match(/moveForward/g) != null) {
         value = line.substr( (line.indexOf("(") + 1) );
         value = value.slice(0, value.indexOf(")"));
-        cmdStack.push("forward." + value);
+        //    setTimeout(() => { this.moveForward(200, 2); }, 2000);
+        cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value*10) + ")"
+        + cmdStringEnd + (this.totalTime) + ");" );
+        this.totalTime+=(value*10);
       } else if (line.match(/moveBackward/g) != null) {
         value = line.substr( (line.indexOf("(") + 1) );
         value = value.slice(0, value.indexOf(")"));
-        cmdStack.push("backward." + value);
+        cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value*10) + ")"
+        + cmdStringEnd + (this.totalTime) + ");" );
+        this.totalTime+=(value*10);
       }
-
     }
+
+
 
 }
 }
