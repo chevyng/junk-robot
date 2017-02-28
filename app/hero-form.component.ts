@@ -19,16 +19,7 @@ robot = junkrobot.createRobot(junkrobot.createMotor(
         DigitalPin.P0
     ))
 for (let i = 0; i < 4; i++) {
-    robot.moveForward(125)
-    robot.turnLeft()
-    robot.moveForward(250)
-    robot.turnRight()
-    robot.moveForward(250)
-    robot.turnRight()
-    robot.moveForward(375)
-    robot.turnRight()
-    robot.moveForward(250)
-    robot.moveBackward(125)
+    robot.moveForward(150)
 }
 `;
 
@@ -85,12 +76,18 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
     // }
   }
 
-  testFunc(): void{
+  testFunc(value: string): void{
     console.log("Test Function");
+    this.parseCodeInput(value);
     for(var i=0; i<this.stack.length; i++){
       console.log("command["+ i + "]: " + this.stack[i]);
       eval(this.stack[i]);
     }
+  }
+
+  reset(): void{
+    console.log("reset function from hero-form");
+    eval("this.graph.reset();");
   }
 
   private determineCmd(line: string, cmdStack: string[]): void {
