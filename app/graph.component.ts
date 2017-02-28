@@ -9,9 +9,7 @@ import * as d3 from 'd3';
   selector: 'd3-graph',
   // encapsulation: ViewEncapsulation.None,
   template: `
-    <span>Distance from Obstacle/Wall : {{obstacleDist}}</span>
     <div></div>
-    <span>Distance from Obstacle/Wall : {{obstacleDist}}</span>
     `,
   styles: [`
 
@@ -59,11 +57,13 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   private current_col;
   private direction; // 1 = North, 2 = East, 3 = South, 4 = West
   private linesName;
-  private obstacleDist;
   private mazeMapArray;
-  private currentDist;
-  private nextDist;
+  private front_currentDist;
+  private front_nextDist;
   private front_sensor;
+  private side_currentDist;
+  private side_nextDist;
+  private side_sensor;
 
   constructor(element: ElementRef) {
     this.el = element;
@@ -255,7 +255,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("transform", "translate(15,15)");
 
     this.front_sensor = sensors.append("text")
-      .text("0")
+      .text("-")
       .attr("text-anchor", "right")
       .attr("font-size", "12px")
       .style("fill", "black")
@@ -267,6 +267,13 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("font-size", "12px")
       .style("fill", "black")
       .attr("transform", "translate(15,30)");
+
+    this.side_sensor = sensors.append("text")
+      .text("-")
+      .attr("text-anchor", "right")
+      .attr("font-size", "12px")
+      .style("fill", "black")
+      .attr("transform", "translate(90,30)");
 
     this.map_maze();
     this.robot.attr("transform", "translate(" + (0 + this.xGap) + "," + ((this.scale * 3) + this.yGap) + ")")
@@ -287,7 +294,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         l -40, 60
         z
       `;
-    )
     }
 
     function sideSensorRange() {
@@ -298,7 +304,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         l -50,-15
         z
       `;
-    )
     }
 
   private updateRobot(value: number): void {
@@ -333,6 +338,33 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
+    this.front_nextDist = 25 + this.checkObstacle(1);
+    this.side_nextDist = 35 + this.checkObstacle(2);
+
+    var front_currentDist = this.front_currentDist;
+    var front_nextDist = this.front_nextDist;
+    console.log("this.front_currentDist=" + front_currentDist + "| front_nextDist=" + front_nextDist);
+    var format = d3.format(",d");
+    this.front_sensor
+      .transition()
+      .duration(1000)
+      .tween("text", function() {
+        var that = d3.select(this),
+          i = d3.interpolateNumber(front_currentDist, front_nextDist);
+        return function(t) { that.text(format(i(t))); };
+      });
+
+    var side_currentDist = this.side_currentDist;
+    var side_nextDist = this.side_nextDist;
+    this.side_sensor
+      .transition()
+      .duration(1000)
+      .tween("text", function() {
+        var that = d3.select(this),
+          i = d3.interpolateNumber(side_currentDist, side_nextDist);
+        return function(t) { that.text(format(i(t))); };
+      });
+
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     console.log("robot center (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     console.log("angle: " + this.angle);
@@ -345,6 +377,10 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     var x = this.xCoord;
     var y = this.yCoord;
 
+    this.front_currentDist = 25 + this.checkObstacle(1);
+    this.side_currentDist = 35 + this.checkObstacle(2);
+    this.updateRobot(90);
+
     var rectTransition = this.robot.transition()
       .duration(1000)
       .attrTween("transform", tween);
@@ -355,7 +391,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         return "translate(" + x + "," + y + ") rotate(" + i(t) + "," + 40 + "," + 50 + ")";
       }
     }
-    this.updateRobot(90);
+
     this.prevCmd = "turnRight";
   }
 
@@ -365,6 +401,10 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     var rotate = this.angle;
     var x = this.xCoord;
     var y = this.yCoord;
+    this.front_currentDist = 25 + this.checkObstacle(1);
+    this.side_currentDist = 35 + this.checkObstacle(2);
+
+    this.updateRobot(-90);
     var rectTransition = this.robot.transition()
       .duration(1000)
       .attrTween("transform", tween);
@@ -375,7 +415,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         return "translate(" + x + "," + y + ") rotate(" + i(t) + "," + 40 + "," + 50 + ")";
       }
     }
-    this.updateRobot(-90);
     this.prevCmd = "turnLeft";
   }
 
@@ -397,54 +436,52 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   // Row > 4 -> (yCoord + 25)
   // Col < 1 -> (xCoord - 25)
   // Col > 6 -> (xCoord + 25)
-  private checkForwardLimit(): void {
-    if (this.direction == 1) {
+  private checkObstacle(sensor: number): number { // Front sensor = 1, Side Sensor = 2
+    if ((this.direction == 1 && sensor == 1) || (this.direction==4 && sensor==2)) {
       var current_line = "R" + (this.current_row - 1) + "C" + this.current_col;
       var second_line = ("R" + (this.current_row - 2) + "C" + this.current_col);
       var third_line = ("R" + (this.current_row - 3) + "C" + this.current_col);
-      if (this.current_row == 1) { this.obstacleDist = 25; }
+      if (this.current_row == 1) { return 0; }
       else if (this.current_row == 2) {
-        if ((this.linesName.indexOf(current_line)) > -1) { this.obstacleDist = 25; }
-        else { this.obstacleDist = 25 + this.scale }
+        if ((this.linesName.indexOf(current_line)) > -1) { return 0; }
+        else { return (this.scale); }
       }
       else if (this.current_row == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else { this.obstacleDist = 25 + this.scale * 2; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else { return (this.scale * 2); }
       }
       else if (this.current_row == 4) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; console.log("Row4") }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + (this.scale * 2); }
-        else { this.obstacleDist = 25 + (this.scale * 3); }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale);  }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else { return (this.scale * 3); }
       }
-      console.log("Obstacle Distance: " + this.obstacleDist);
     }
 
-    if (this.direction == 3) {
+    if ((this.direction == 3 && sensor==1) || (this.direction==2 && sensor==2)) {
       var current_line = "R" + (this.current_row) + "C" + this.current_col;
       var second_line = "R" + (this.current_row + 1) + "C" + this.current_col;
       var third_line = "R" + (this.current_row + 2) + "C" + this.current_col;
-      if (this.current_row == 4) { this.obstacleDist = 25; }
+      if (this.current_row == 4) { return 0; }
       if (this.current_row == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else { this.obstacleDist = 25 + this.scale }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else { return (this.scale); }
       }
       if (this.current_row == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else { this.obstacleDist = 25 + this.scale * 2; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else { return (this.scale * 2); }
+          else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
       }
       if (this.current_row == 1) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else { this.obstacleDist = 25 + this.scale * 3; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else { return (this.scale * 3); }
       }
-      console.log("Obstacle Distance: " + this.obstacleDist);
     }
 
-    if (this.direction == 2) {
+    if ((this.direction==2 && sensor==1) || (this.direction==1 && sensor==2)) {
       var current_line = "C" + (this.current_col) + "R" + this.current_row;
       var second_line = "C" + (this.current_col + 1) + "R" + this.current_row;
       var third_line = "C" + (this.current_col + 2) + "R" + this.current_row;
@@ -452,79 +489,77 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       var fifth_line = "C" + (this.current_col + 4) + "R" + this.current_row;
       var last_line = "C" + (this.current_col + 5) + "R" + this.current_row;
 
-      if (this.current_col == 6) { this.obstacleDist = 25; }
+      if (this.current_col == 6) { return 0; }
       if (this.current_col == 5) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else { this.obstacleDist = 25 + this.scale }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else { return (this.scale); }
       }
       if (this.current_col == 4) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else { this.obstacleDist = 25 + this.scale * 2; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else { return (this.scale * 2); }
       }
       if (this.current_col == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else { this.obstacleDist = 25 + this.scale * 3; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else { return (this.scale * 3); }
       }
       if (this.current_col == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { this.obstacleDist = 25 + this.scale * 3; }
-        else { this.obstacleDist = 25 + this.scale * 4; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
+        else { return (this.scale * 4); }
       }
       if (this.current_col == 1) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { this.obstacleDist = 25 + this.scale * 3; }
-        else if (this.linesName.indexOf(fifth_line) > - 1) { this.obstacleDist = 25 + this.scale * 4; }
-        else { this.obstacleDist = 25 + this.scale * 5; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
+        else if (this.linesName.indexOf(fifth_line) > - 1) { return (this.scale * 4); }
+        else { return (this.scale * 5); }
       }
-      console.log("Obstacle Distance: " + this.obstacleDist);
     }
 
-    if (this.direction == 4) {
+    if ((this.direction==4 && sensor==1) || (this.direction==3 && sensor==2) ) {
       var current_line = "C" + (this.current_col - 1) + "R" + this.current_row;
       var second_line = "C" + (this.current_col - 2) + "R" + this.current_row;
       var third_line = "C" + (this.current_col - 3) + "R" + this.current_row;
       var fourth_line = "C" + (this.current_col - 4) + "R" + this.current_row;
       var fifth_line = "C" + (this.current_col - 5) + "R" + this.current_row;
 
-      if (this.current_col == 1) { this.obstacleDist = 25; }
+      if (this.current_col == 1) { return 0; }
       if (this.current_col == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else { this.obstacleDist = 25 + this.scale }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else { return (this.scale); }
       }
       if (this.current_col == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else { this.obstacleDist = 25 + this.scale * 2; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else { return (this.scale * 2); }
       }
       if (this.current_col == 4) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else { this.obstacleDist = 25 + this.scale * 3; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else { return (this.scale * 3); }
       }
       if (this.current_col == 5) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { this.obstacleDist = 25 + this.scale * 3; }
-        else { this.obstacleDist = 25 + this.scale * 4; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
+        else { return (this.scale * 4); }
       }
       if (this.current_col == 6) {
-        if (this.linesName.indexOf(current_line) > -1) { this.obstacleDist = 25; }
-        else if (this.linesName.indexOf(second_line) > - 1) { this.obstacleDist = 25 + this.scale; }
-        else if (this.linesName.indexOf(third_line) > - 1) { this.obstacleDist = 25 + this.scale * 2; }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { this.obstacleDist = 25 + this.scale * 3; }
-        else if (this.linesName.indexOf(fifth_line) > - 1) { this.obstacleDist = 25 + this.scale * 4; }
-        else { this.obstacleDist = 25 + this.scale * 5; }
+        if (this.linesName.indexOf(current_line) > -1) { return 0; }
+        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
+        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
+        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
+        else if (this.linesName.indexOf(fifth_line) > - 1) { return (this.scale * 4); }
+        else { return (this.scale * 5); }
       }
-      console.log("Obstacle Distance: " + this.obstacleDist);
     }
 
   }
@@ -535,25 +570,28 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.robot.transition()
       .attr("transform", "translate(" + this.xCoord + "," + this.yCoord + ") rotate(" + this.angle + ")")
       .duration(duration);
-    // this.interpolateDist(duration);
 
-    //  this.front_sensor.transition()
-    //   .duration(1000)
-    //   .tween("text", function(){
-    //        var i = d3.interpolate(475,325 );
-    //        return function(t) { console.log(i(t)); }
-    //      }
-    //   );
-    console.log("this.prevDist=" + this.prevDist);
-    var prevDist = this.prevDist;
-    var nextDist = this.nextDist;
+    console.log("this.front_currentDist=" + this.front_currentDist);
+    var front_currentDist = this.front_currentDist;
+    var front_nextDist = this.front_nextDist;
     var format = d3.format(",d");
     this.front_sensor
       .transition()
       .duration(duration)
       .tween("text", function() {
         var that = d3.select(this),
-          i = d3.interpolateNumber(prevDist, nextDist);
+          i = d3.interpolateNumber(front_currentDist, front_nextDist);
+        return function(t) { that.text(format(i(t))); };
+      });
+
+    var side_currentDist = this.side_currentDist;
+    var side_nextDist = this.side_nextDist;
+    this.side_sensor
+      .transition()
+      .duration(duration)
+      .tween("text", function() {
+        var that = d3.select(this),
+          i = d3.interpolateNumber(side_currentDist, side_nextDist);
         return function(t) { that.text(format(i(t))); };
       });
   }
@@ -591,8 +629,9 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   public moveForward(value: number, duration: number): void {
-    this.checkForwardLimit();
-    this.prevDist = this.obstacleDist;
+    console.log("front obstacle: " + this.checkObstacle(1) + " | side obstacle: " + this.checkObstacle(2));
+    this.front_currentDist = 25 + this.checkObstacle(1);
+    this.side_currentDist = 35 + this.checkObstacle(2);
     if (this.direction == 1) {
       this.yCoord -= value;
       this.current_row -= (value / this.scale);
@@ -624,9 +663,9 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     console.log("robot center (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     console.log("angle: " + this.angle + " direction = " + this.direction);
     console.log("current (row,column): (" + this.current_row + "," + this.current_col + ")");
-    this.checkForwardLimit();
-    this.nextDist = this.obstacleDist;
-    console.log("prevDist:" + this.prevDist + ", nextDist:" + this.nextDist);
+    this.front_nextDist = 25 + this.checkObstacle(1);
+    this.side_nextDist = 35 + this.checkObstacle(2);
+    console.log("prevDist:" + this.front_currentDist + ", front_nextDist:" + this.front_nextDist);
     this.move(duration);
     this.prevCmd = "moveForward";
   }
@@ -650,20 +689,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       this.yCoord -= 90;
     }
   }
-
-  private interpolateDist(duration: number) {
-    console.log("Interpolate Dist function");
-    var numTween = function() {
-      var i = d3.interpolate(this.prevDist, this.nextDist);
-      return function(t) { this.obstacleDist = i(t); }
-    }
-    this.front_sensor.transition()
-      .duration(1000)
-      .attrTween("text", numTween);
-
-  }
-
-
 
   test(): void {
     this.moveForward(125, 1000);
