@@ -6,7 +6,14 @@
       <!-- <label for="d3-graph">D3Graph</label> -->
       <d3-graph></d3-graph>
       <button type="button" class="btn btn-default" (click)="testFunc(codemirror.value);"> Run </button>
+      <button type="button" class="btn btn-default" (click)="stopRobot();"> Stop Robot </button>
       <button type="button" class="btn btn-default" (click)="reset();"> Reset </button>
+      <button type="button" class="btn btn-default" (click)="test();"> Test </button>
+      <button type="button" class="btn btn-default" (click)="turnLeft();"> Turn left </button>
+      <button type="button" class="btn btn-default" (click)="turnRight();"> Turn right </button>
+      <button type="button" class="btn btn-default" (click)="moveForward();"> Move forward </button>
+      <button type="button" class="btn btn-default" (click)="moveBackward();"> Move Backward </button>
+
       <div>
         <label for="codeMirror">Code Mirror</label>
         <br>

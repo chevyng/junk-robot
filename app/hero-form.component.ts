@@ -7,6 +7,10 @@ import 'codemirror/mode/javascript/javascript';
 
 var sampleCode = `// Junk robot PXT JS code...
 let robot: junkrobot.Robot = null
+let sideSensor = junkrobot.ping(DigitalPin.P16, DigitalPin.P19)
+let frontSensor = junkrobot.ping(DigitalPin.P5, DigitalPin.P20)
+let sideThreshold = 10
+let frontThreshold = 10
 robot = junkrobot.createRobot(junkrobot.createMotor(
     DigitalPin.P0,
     DigitalPin.P0,
@@ -18,8 +22,30 @@ robot = junkrobot.createRobot(junkrobot.createMotor(
         DigitalPin.P0,
         DigitalPin.P0
     ))
-for (let i = 0; i < 4; i++) {
+
+while(true) {
+  if(sideSensor > sideThreshold) {
+    robot.turnRight()
     robot.moveForward(150)
+  } else if(sideSensor < sideThreshold && frontSensor > frontThreshold){
+    robot.moveForward(150)
+  } else if(sideSensor < sideThreshold && frontSensor < frontThreshold){
+    robot.turnLeft()
+  }
+}
+    robot.turnRight()
+    robot.moveForward(300)
+    robot.turnLeft()
+    robot.moveForward(150)
+    robot.turnLeft()
+    robot.moveForward(300)
+    robot.turnRight()
+    robot.moveForward(300)
+    robot.turnRight()
+    robot.moveForward(600)
+    robot.turnRight()
+    robot.moveForward(450)
+    robot.turnLeft()
 }
 `;
 
@@ -51,9 +77,7 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
 
   log = '';
   parseCodeInput(value: string): void {
-    // let stack: string[] = new Array();
     var arrayofLines = value.split("\n");
-    var leftCount = 0;
     this.stack = []; // Clear array
     this.totalTime = 0; // Clear timing
     console.log("Num of line break = " + arrayofLines.length);
@@ -61,15 +85,7 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
       this.log += `Line${i}: `;
       this.log += `${arrayofLines[i]}\n`;
       this.determineCmd(arrayofLines[i], this.stack);
-      if (arrayofLines[i].match(/turnLeft/g) != null) {
-        var strValue = arrayofLines[i]
-          .substr((arrayofLines[i].indexOf("(") + 1));
-        strValue = strValue.slice(0, strValue.indexOf(")"));
-        // console.log("value :" + strValue);
-        leftCount++;
-      }
     }
-    // console.log("Num of left turn: " + leftCount);
     console.log("Num of command: " + this.stack.length);
     // for(var i=0; i<this.stack.length; i++){
     //     console.log("command["+ i + "]: " + this.stack[i]);
@@ -79,15 +95,43 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
   testFunc(value: string): void{
     console.log("Test Function");
     this.parseCodeInput(value);
+    // eval("this.graph.receiveCmd(this.stack);");
     for(var i=0; i<this.stack.length; i++){
+      var t0 = performance.now();
       console.log("command["+ i + "]: " + this.stack[i]);
       eval(this.stack[i]);
+      console.log("Command took: " + (performance.now() - t0));
     }
+  }
+
+  test(): void{
+    eval("this.graph.receiveCmd(this.stack);");
+    eval("this.graph.newMove(150);");
   }
 
   reset(): void{
     console.log("reset function from hero-form");
     eval("this.graph.reset();");
+  }
+
+  stopRobot(): void{
+    eval("this.graph.stopRobot();");
+  }
+
+  turnLeft(): void{
+    eval("this.graph.turnLeft();");
+  }
+
+  turnRight(): void{
+    eval("this.graph.turnRight();");
+  }
+
+  moveForward(): void{
+    eval("this.graph.moveForward(75, 500);")
+  }
+
+  moveBackward(): void{
+    eval("this.graph.moveBackward(75, 500);")
   }
 
   private determineCmd(line: string, cmdStack: string[]): void {
@@ -137,6 +181,12 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
         cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value*10) + ")"
         + cmdStringEnd + (this.totalTime) + ");" );
         this.totalTime+=(value*10);
+      } else if (line.match(/sideThreshold =/g) != null) {
+        value = line.substr( (line.indexOf("=") + 1) );
+        cmdStack.push("sideThreshold=" + value);
+      } else if (line.match(/frontThreshold =/g) != null) {
+        value = line.substr( (line.indexOf("=") + 1) );
+        cmdStack.push("frontThreshold=" + value);
       }
     }
 
