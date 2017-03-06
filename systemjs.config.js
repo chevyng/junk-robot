@@ -28,6 +28,7 @@
       'angular-in-memory-web-api': 'npm:angular-in-memory-web-api/bundles/in-memory-web-api.umd.js',
       'ng2-codemirror':            'npm:ng2-codemirror',
       'codemirror':                'npm:codemirror',
+      '@ng-bootstrap/ng-bootstrap': 'npm:@ng-bootstrap/ng-bootstrap/bundles/ng-bootstrap.js',
       'd3': 'npm:d3',
       'd3-array': 'npm:d3-array/',
       'd3-axis': 'npm:d3-axis/',

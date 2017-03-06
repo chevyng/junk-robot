@@ -53,8 +53,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   private yGap;
   private angle = 0;
   private prevCmd: string;
-  private current_row;
-  private current_col;
   private direction; // 1 = North, 2 = East, 3 = South, 4 = West
   private linesName;
   private front_sensor_reading;
@@ -63,6 +61,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   private side_sensor;
   private sideThreshold;
   private frontThreshold;
+  private crash;
 
   constructor(element: ElementRef) {
     this.el = element;
@@ -95,17 +94,18 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.xCoord = 0 + this.xGap;
     this.yCoord = (this.scale * 3) + this.yGap;
     this.direction = 1;
-    this.current_row = 4;
-    this.current_col = 1;
-    this.sideThreshold = 25;
-    this.frontThreshold = 15;
+    this.sideThreshold = 36;
+    this.frontThreshold = 26;
+    this.side_sensor_reading = 100;
+    this.front_sensor_reading = 25;
+    this.crash = 0;
   }
 
   private map_maze(): void {
-    var totalLines = mazeMap.mazes.testMaze.length;
+    var totalLines = mazeMap.mazes.maze1.length;
     this.linesName = new Array(totalLines);
     for (var i = 0; i < totalLines; i++) {
-      this.linesName[i] = mazeMap.mazes.testMaze[i].name;
+      this.linesName[i] = mazeMap.mazes.maze1[i].name;
       // console.log(this.linesName[i]);
     }
   }
@@ -192,7 +192,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     var mazes = svg.append("g")
       .attr("class", "maze")
       .selectAll("line")
-      .data(mazeMap.mazes.testMaze)
+      .data(mazeMap.mazes.maze1)
       .enter()
       .append("line");
 
@@ -316,8 +316,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
-    front += this.checkObstacle1(1);
-    side += this.checkObstacle1(2);
+    front += this.check_obstacle(1);
+    side += this.check_obstacle(2);
     console.log("**BEFORE** FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     if (this.direction == 1) {
       front = this.yCoord - front;
@@ -414,16 +414,17 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     console.log("reset function");
     this.angle = 0;
     this.direction = 1;
-    this.current_row = 4;
-    this.current_col = 1;
     this.xCoord = 0 + this.xGap;
     this.yCoord = (this.scale * 3) + this.yGap;
+    this.crash = 0;
+    this.front_sensor_reading = 100;
+    this.side_sensor_reading = 100;
     this.robot.attr("transform", "translate(" + this.xCoord + "," + this.yCoord + ")");
   }
 
   stopRobot(): void {
     console.log("stop function");
-    this.robot.transition().duration(0);
+    this.crash = 1;
   }
 
   // If row is below 1 or above 4, stop animation as the robot has crashed into the wall
@@ -433,134 +434,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   // Row > 4 -> (yCoord + 25)
   // Col < 1 -> (xCoord - 25)
   // Col > 6 -> (xCoord + 25)
-  private checkObstacle(sensor: number): number { // Front sensor = 1, Side Sensor = 2
-    if ((this.direction == 1 && sensor == 1) || (this.direction == 4 && sensor == 2)) {
-      var current_line = "R" + (this.current_row - 1) + "C" + this.current_col;
-      var second_line = ("R" + (this.current_row - 2) + "C" + this.current_col);
-      var third_line = ("R" + (this.current_row - 3) + "C" + this.current_col);
-      if (this.current_row == 1) { return 0; }
-      else if (this.current_row == 2) {
-        if ((this.linesName.indexOf(current_line)) > -1) { return 0; }
-        else { return (this.scale); }
-      }
-      else if (this.current_row == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else { return (this.scale * 2); }
-      }
-      else if (this.current_row == 4) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else { return (this.scale * 3); }
-      }
-    }
-
-    if ((this.direction == 3 && sensor == 1) || (this.direction == 2 && sensor == 2)) {
-      var current_line = "R" + (this.current_row) + "C" + this.current_col;
-      var second_line = "R" + (this.current_row + 1) + "C" + this.current_col;
-      var third_line = "R" + (this.current_row + 2) + "C" + this.current_col;
-      if (this.current_row == 4) { return 0; }
-      if (this.current_row == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else { return (this.scale); }
-      }
-      if (this.current_row == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else { return (this.scale * 2); }
-          else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-      }
-      if (this.current_row == 1) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else { return (this.scale * 3); }
-      }
-    }
-
-    if ((this.direction == 2 && sensor == 1) || (this.direction == 1 && sensor == 2)) {
-      var current_line = "C" + (this.current_col) + "R" + this.current_row;
-      var second_line = "C" + (this.current_col + 1) + "R" + this.current_row;
-      var third_line = "C" + (this.current_col + 2) + "R" + this.current_row;
-      var fourth_line = "C" + (this.current_col + 3) + "R" + this.current_row;
-      var fifth_line = "C" + (this.current_col + 4) + "R" + this.current_row;
-      var last_line = "C" + (this.current_col + 5) + "R" + this.current_row;
-      console.log("Facing East and forward sensor - current_col=" + this.current_col + ", current_row=" + this.current_row);
-      console.log("First line check:" + current_line);
-      if (this.current_col == 6) { return 0; }
-      if (this.current_col == 5) {
-        if (this.linesName.indexOf(current_line) > -1) { console.log("first line"); return 0; }
-        else { console.log("no line found"); return (this.scale); }
-      }
-      if (this.current_col == 4) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else { return (this.scale * 2); }
-      }
-      if (this.current_col == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { console.log("first line"); return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { console.log("2nd line"); return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { console.log("3rd line"); return (this.scale * 2); }
-        else { console.log("no line found"); return (this.scale * 3); }
-      }
-      if (this.current_col == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
-        else { return (this.scale * 4); }
-      }
-      if (this.current_col == 1) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
-        else if (this.linesName.indexOf(fifth_line) > - 1) { return (this.scale * 4); }
-        else { return (this.scale * 5); }
-      }
-    }
-
-    if ((this.direction == 4 && sensor == 1) || (this.direction == 3 && sensor == 2)) {
-      var current_line = "C" + (this.current_col - 1) + "R" + this.current_row;
-      var second_line = "C" + (this.current_col - 2) + "R" + this.current_row;
-      var third_line = "C" + (this.current_col - 3) + "R" + this.current_row;
-      var fourth_line = "C" + (this.current_col - 4) + "R" + this.current_row;
-      var fifth_line = "C" + (this.current_col - 5) + "R" + this.current_row;
-
-      if (this.current_col == 1) { return 0; }
-      if (this.current_col == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else { return (this.scale); }
-      }
-      if (this.current_col == 3) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else { return (this.scale * 2); }
-      }
-      if (this.current_col == 4) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else { return (this.scale * 3); }
-      }
-      if (this.current_col == 5) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
-        else { return (this.scale * 4); }
-      }
-      if (this.current_col == 6) {
-        if (this.linesName.indexOf(current_line) > -1) { return 0; }
-        else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale); }
-        else if (this.linesName.indexOf(third_line) > - 1) { return (this.scale * 2); }
-        else if (this.linesName.indexOf(fourth_line) > - 1) { return (this.scale * 3); }
-        else if (this.linesName.indexOf(fifth_line) > - 1) { return (this.scale * 4); }
-        else { return (this.scale * 5); }
-      }
-    }
-
-  }
 
   private move(duration: number, front: number, side: number): void {
     //Default 1s if none is provided
@@ -630,8 +503,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         this.yCoord += 90;
       }
     }
-    var front = this.checkObstacle1(1);
-    var side = this.checkObstacle1(2);
+    var front = this.check_obstacle(1);
+    var side = this.check_obstacle(2);
     //TODO: Pull function out
     if (this.direction == 1) {
       front = this.yCoord - front;
@@ -657,11 +530,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
 
   public moveForward(value: number, duration: number): void {
     var crash = 0;
-    // if (this.checkObstacle(1) < value) {
-    //   value = this.front_sensor_reading;
-    //   console.log("ROBOT IS GONNA CRASH!!");
-    //   crash = 1;
-    // }
+
     console.log("Before checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
     if(this.prevCmd == "turnRight" || this.prevCmd == "turnLeft"){
       if(value >= this.front_sensor_reading) {
@@ -714,8 +583,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
-    var front = this.checkObstacle1(1);
-    var side = this.checkObstacle1(2);
+    var front = this.check_obstacle(1);
+    var side = this.check_obstacle(2);
     if (this.direction == 1) {
       front = this.yCoord - front;
       side = side - (this.xCoord + 80);
@@ -734,18 +603,19 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
 
-    if(crash) { front = 0; }
+    if(crash) {
+      front = 0;
+      this.crash = crash;
+    }
 
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     console.log("robot center (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     this.move(duration, front, side);
     this.update_frontSensor(front, side);
     console.log("After moving and updating : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
-    // if (crash) {
-    //   setTimeout(function() { alert("Robot has crash! Resetting robot"); }, duration);
-    //   this.robot.transition().duration(0);
-    //   this.reset();
-    // }
+    if (crash) {
+      setTimeout(function() { alert("Robot has crash! Reset the robot!"); }, duration);
+    }
 
     this.prevCmd = "moveForward";
   }
@@ -772,60 +642,26 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
 
   private check_frontSensor(): void {
     if (this.direction == 1) {
-      this.front_sensor_reading = this.yCoord - this.checkObstacle1(1);
-      this.side_sensor_reading = this.checkObstacle1(2) - (this.xCoord + robotDimension.base.width);
+      this.front_sensor_reading = this.yCoord - this.check_obstacle(1);
+      this.side_sensor_reading = this.check_obstacle(2) - (this.xCoord + robotDimension.base.width);
     } else if (this.direction == 2) {
-      this.front_sensor_reading = this.checkObstacle1(1) - this.xCoord;
-      this.side_sensor_reading = this.checkObstacle1(2) - (this.yCoord + robotDimension.base.width);
+      this.front_sensor_reading = this.check_obstacle(1) - this.xCoord;
+      this.side_sensor_reading = this.check_obstacle(2) - (this.yCoord + robotDimension.base.width);
     } else if (this.direction == 3) {
-      this.front_sensor_reading = this.checkObstacle1(1) - this.yCoord;
-      this.side_sensor_reading = (this.xCoord - robotDimension.base.width) - this.checkObstacle1(2);
+      this.front_sensor_reading = this.check_obstacle(1) - this.yCoord;
+      this.side_sensor_reading = (this.xCoord - robotDimension.base.width) - this.check_obstacle(2);
     } else if (this.direction == 4) {
-      this.front_sensor_reading = this.xCoord - this.checkObstacle1(1);
-      this.side_sensor_reading = (this.yCoord - robotDimension.base.width) - this.checkObstacle1(2);
+      this.front_sensor_reading = this.xCoord - this.check_obstacle(1);
+      this.side_sensor_reading = (this.yCoord - robotDimension.base.width) - this.check_obstacle(2);
     }
   }
 
   private update_frontSensor(front: number, side: number): void {
-    // if(front==this.scale){
-    //     this.front_sensor_reading = 0;
-    // } else {
-    //     this.front_sensor_reading = front;
-    // }
     this.front_sensor_reading = front;
     this.side_sensor_reading = side;
   }
 
-  private newMove(x: number): void {
-    var timing = 6.66;
-    // var interval = x/timing;
-    var xC = this.xCoord;
-    var yC = this.yCoord;
-    var ang = this.angle;
-    var robot = this.robot;
-    // this.xCoord += x;
-    console.log("xCoord before:" + this.xCoord);
-    this.interval(move, timing, 150);
-    console.log("xCoord after:" + this.xCoord);
-    function move() {
-      xC += 1;
-      robot.transition()
-        .attr("transform", "translate(" + xC + "," + yC + ") rotate(" + ang + ")")
-        .duration(1);
-    }
-
-  }
-
-  private movefunction(): number {
-    this.xCoord += 1;
-    this.robot.transition()
-      .attr("transform", "translate(" + this.xCoord + "," + this.yCoord + ") rotate(" + this.angle + ")")
-      .duration(66.66);
-
-    return 1;
-  }
-
-  private checkObstacle1(sensor: number): number { // Front sensor = 1, Side Sensor = 2
+  private check_obstacle(sensor: number): number { // Front sensor = 1, Side Sensor = 2
     var x = this.xCoord;
     var y = this.yCoord;
     var row;
@@ -969,56 +805,141 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-
-  private interval(func, wait, times) {
-    var interv = function(w, t) {
-      return function() {
-        if (typeof t === "undefined" || t-- > 0) {
-          setTimeout(interv, w);
-          try {
-            func.call(null);
-          }
-          catch (e) {
-            t = 0;
-            throw e.toString();
-          }
+  rightWallFollower1(): void {
+    var parent = this;
+    parent.turnRight(); //Callibrate sensor
+    parent.turnLeft();
+    function rightWallFollower(): void {
+      console.log("front-sensor threshold:" + parent.frontThreshold + " , side-sensor threshold:" + parent.sideThreshold);
+      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
+      if(parent.side_sensor_reading > parent.sideThreshold) {
+          setTimeout(() => { parent.turnRight(); }, 0);
+          setTimeout(() => { parent.moveForward(150,1000); },  1000);
+          console.log("Inside 1st scenario");
+      } else if(parent.side_sensor_reading < parent.sideThreshold &&
+        parent.front_sensor_reading > parent.frontThreshold) {
+          setTimeout(() => { parent.moveForward(150,1000); }, 1000);
+          console.log("Inside 2nd scenario");
+      } else if(parent.side_sensor_reading < parent.sideThreshold &&
+        parent.front_sensor_reading < parent.frontThreshold) {
+          setTimeout(() => { parent.turnLeft(); }, 1000);
+          console.log("Inside 3rd scenario");
         }
-      };
-    } (wait, times);
+    }
 
-    setTimeout(interv, wait);
+    function recursion(num, i): void {
+        rightWallFollower();
+        i += 1;
+        if(i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"; return; };
+        console.log("Inside recursion | i=" + i);
 
-    return { clear: function() { t = 0 } };
+        setTimeout(function() { recursion(num, i); }, 1750);
+    }
 
-  };
+    recursion(200, 0);
+  }
 
-  receiveCmd(cmdStack: string[]): void {
+  receiveCmd(cmdStack: string[], timeStack: number[]): void {
     console.log("CmdStack size=" + cmdStack.length);
     for (var i = 0; i < cmdStack.length; i++) {
-      // var t0 = performance.now();
       console.log("command[" + i + "]: " + cmdStack[i]);
       if (cmdStack[i].match(/sideThreshold/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
         this.sideThreshold = value;
+        cmdStack.splice(i,1);
         console.log("sideThreshold updated to :" + this.sideThreshold);
       }
 
       if (cmdStack[i].match(/frontThreshold/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
         this.frontThreshold = value;
+        cmdStack.splice(i,1);
         console.log("frontThreshold updated to :" + this.frontThreshold);
       }
-      // eval(this.stack[i]);
-      // console.log("Command took: " + (performance.now() - t0));
+
+    }
+
+    for (var i = 0 ; i < cmdStack.length; i++){
+      // console.log("new command[" + i + "]: " + cmdStack[i] + " | time:" + timeStack[i]);
     }
   }
 
-  test(): void {
-    this.moveForward(125, 1000);
-    setTimeout(() => { this.turnRight(); }, 1000);
-    setTimeout(() => { this.moveForward(250, 2000); }, 2000);
-    setTimeout(() => { this.turnRight(); }, 4000);
-    setTimeout(() => { this.moveForward(125, 1000); }, 5000);
-    setTimeout(() => { this.turnRight(); }, 6000);
-    setTimeout(() => { this.moveForward(250, 2000); }, 7000);
+  receiveCmd1(cmdStack: string[],timeStack: number[]): void {
+    var parent = this;
+    function recursion(cmdStack, timeStack, i): void {
+        eval(cmdStack[i]);
+        i += 1;
+        if(i >= cmdStack.length || parent.crash == 1) { console.log("Finish executing/Robot crashed!"; return; };
+        console.log("Inside recursion | i=" + i);
+
+        setTimeout(function() { recursion(cmdStack, timeStack, i); }, timeStack[i-1]);
+    }
+
+    recursion(cmdStack,timeStack, 0);
   }
+
+  receiveCmd2(cmdStack: string[], timeStack: number[]): void {
+    var parent = this;
+    console.log("CmdStack size=" + cmdStack.length);
+    var initial_num;
+    var condition_num;
+    for (var i = 0; i < cmdStack.length; i++) {
+      console.log("command[" + i + "]: " + cmdStack[i]);
+      // console.log("time[" + i + "]: " + timeStack[i]);
+      if (cmdStack[i].match(/for-loop-start/g) != null) {
+        var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
+        initial_num = value.slice(0, value.indexOf(","));
+        condition_num = value.slice(value.indexOf(",")+1, value.indexOf(")"));
+        console.log("For loop-> initial_num:" + initial_num + " | condition:" + condition_num);
+        cmdStack.splice(i,1);
+      }
+
+    }
+
+    for (var i = 0 ; i < cmdStack.length; i++){
+      console.log("new command[" + i + "]: " + cmdStack[i] + " | time:" + timeStack[i]);
+    }
+    function recursion(cmdStack, timeStack, i, j): void {
+        eval(cmdStack[j]);
+        i += 1;
+        j += 1;
+        if(i >= (parseInt(condition_num)*(cmdStack.length+1)) || parent.crash == 1) { console.log("Finish executing/Robot crashed!"; return; };
+        console.log("Inside recursion | i=" + i);
+        if((i%(cmdStack.length+1)) == 0) { j = 0; }
+        setTimeout(function() { recursion(cmdStack, timeStack, i, j); }, timeStack[j-1]);
+    }
+
+    recursion(cmdStack,timeStack, parseInt(initial_num), 0);
+
+  }
+
+
+  test(): void {
+    var timing = 0;
+    var complete = false;
+    console.log("Am I inside test");
+    for(var i=0; i<4; i++){
+      if(!complete){
+        if(this.side_sensor_reading > this.sideThreshold) {
+            setTimeout(() => { this.turnRight(); }, timing * 1000);
+            timing += 1;
+            setTimeout(() => { this.moveForward(150,1000); }, timing * 1000);
+            timing += 1;
+            complete = true;
+            console.log("Inside 1st scenario");
+        } else if(this.side_sensor_reading < this.sideThreshold &&
+          this.front_sensor_reading > this.frontThreshold) {
+            setTimeout(() => { this.moveForward(150,1000); }, timing * 1000);
+            timing += 1;
+            complete = 1;
+            console.log("Inside 2nd scenario");
+        } else if(this.side_sensor_reading < this.sideThreshold &&
+          this.front_sensor_reading < this.frontThreshold) {
+            setTimeout(() => { this.turnLeft(); }, timing * 1000);
+            timing += 1;
+            complete = 1;
+            console.log("Inside 3rd scenario");
+          }
+        }
+      }
+    }

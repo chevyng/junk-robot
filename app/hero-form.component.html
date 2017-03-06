@@ -1,40 +1,63 @@
+<header-component></header-component>
 
 <div class="container">
-  <div  [hidden]="submitted">
-    <h1>Robot Simulator</h1>
-    <form (ngSubmit)="onSubmit()" #heroForm="ngForm">
-      <!-- <label for="d3-graph">D3Graph</label> -->
-      <d3-graph></d3-graph>
-      <button type="button" class="btn btn-default" (click)="testFunc(codemirror.value);"> Run </button>
-      <button type="button" class="btn btn-default" (click)="stopRobot();"> Stop Robot </button>
-      <button type="button" class="btn btn-default" (click)="reset();"> Reset </button>
-      <button type="button" class="btn btn-default" (click)="test();"> Test </button>
-      <button type="button" class="btn btn-default" (click)="turnLeft();"> Turn left </button>
-      <button type="button" class="btn btn-default" (click)="turnRight();"> Turn right </button>
-      <button type="button" class="btn btn-default" (click)="moveForward();"> Move forward </button>
-      <button type="button" class="btn btn-default" (click)="moveBackward();"> Move Backward </button>
+    <!-- <div  [hidden]="submitted"> -->
+      <h1>Robot Simulator</h1>
+      <form (ngSubmit)="onSubmit()" #heroForm="ngForm" id="mainForm">
+        <!-- <label for="d3-graph">D3Graph</label> -->
+        <div class="row">
+          <div class="col d3-component">
+            <d3-graph></d3-graph>
+          </div>
+          <div class="col">
+            <p></p>
+            <button type="button" class="btn btn-success" (click)="testFunc(codemirror.value);"> Run </button>
+            <button type="button" class="btn btn-danger" (click)="stopRobot();"> Stop Robot </button>
+            <button type="button" class="btn btn-warning" (click)="reset();"> Reset </button>
+            <p></p>
+            <button type="button" class="btn btn-default" (click)="test();"> Test </button>
+            <button type="button" class="btn btn-default" (click)="test2();"> Test 2 </button>
+            <button type="button" class="btn btn-default" (click)="forLoopTest();"> For Loop Test </button>
+            <p></p>
+            <button type="button" class="btn btn-primary" (click)="moveForward();"> Move forward </button>
+            <p></p>
+            <button type="button" class="btn btn-primary" (click)="moveBackward();"> Move Backward </button>
+            <p></p>
+            <button type="button" class="btn btn-primary" (click)="turnLeft();"> Turn left </button>
+            <p></p>
+            <button type="button" class="btn btn-primary" (click)="turnRight();"> Turn right </button>
 
-      <div>
-        <label for="codeMirror">Code Mirror</label>
-        <br>
-          <codemirror #codemirror
-           [(ngModel)]="code"
-           [config]="config"
-           id="codemirror"
-           name="codemirror"
-           >
-          </codemirror>
-          <br>
-          <!-- <pre>{{code}}</pre> -->
-      </div>
+            <p></p>
+            <button type="button" class="btn btn-success" (click)="rightWallFollower();"> Wall Follower </button>
 
-      <button type="submit" class="btn btn-default" [disabled]="!heroForm.form.valid">Submit</button>
-      <button type="button" class="btn btn-default" (click)="resetForm(); heroForm.reset()">Clear</button>
-      <button type="button" class="btn btn-default" (click)="parseCodeInput(codemirror.value)">Parse</button>
-      <button type="button" class="btn btn-default" (click)="testFunc();">Test Function</button>
-      <br>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <button type="button" class="btn btn-danger" (click)="resetForm(); heroForm.reset()">Clear Code</button>
+            <button type="button" class="btn btn-primary" (click)="parseCodeInput(codemirror.value)">Parse</button>
+            <button type="button" class="btn btn-success" (click)="testFunc(codemirror.value);"> Run </button>
+          </div>
+        </div>
+          <div class="col code-mirror">
+            <!-- <label for="codeMirror">Editor</label> -->
+            <br>
+              <codemirror #codemirror
+               [(ngModel)]="code"
+               [config]="config"
+               id="codemirror"
+               name="codemirror"
+               >
+              </codemirror>
+              <br>
+              <!-- <pre>{{code}}</pre> -->
+          </div>
+
+
+
       <!-- <pre>{{log}}</pre> -->
     </form>
-  </div>
+  <!-- </div> -->
 
 </div>

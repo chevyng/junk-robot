@@ -1,0 +1,18 @@
+#mainForm {
+  width: 100%;
+  height: 100%;
+}
+
+.container {
+  /*width: 100%;*/
+  /*background-color: #f2f9ff;*/
+}
+
+.code-mirror {
+  width: 960px;
+}
+
+.d3-component {
+  width: 960px;
+  /*height: 1000px;*/
+}

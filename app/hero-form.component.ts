@@ -1,64 +1,25 @@
 import { Component, OnInit, ElementRef, OnChanges, AfterViewInit, ViewChild } from '@angular/core';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { Hero }    from './hero';
 import { TestGraphComponent } from './graph.component';
+import { HeaderComponent } from './header.component';
+import dummyCodes from "./dummyCodes";
 import 'codemirror/mode/clike/clike';
 import 'codemirror/lib/codemirror';
 import 'codemirror/mode/javascript/javascript';
 
-var sampleCode = `// Junk robot PXT JS code...
-let robot: junkrobot.Robot = null
-let sideSensor = junkrobot.ping(DigitalPin.P16, DigitalPin.P19)
-let frontSensor = junkrobot.ping(DigitalPin.P5, DigitalPin.P20)
-let sideThreshold = 10
-let frontThreshold = 10
-robot = junkrobot.createRobot(junkrobot.createMotor(
-    DigitalPin.P0,
-    DigitalPin.P0,
-    DigitalPin.P0,
-    DigitalPin.P0
-), junkrobot.createMotor(
-        DigitalPin.P0,
-        DigitalPin.P0,
-        DigitalPin.P0,
-        DigitalPin.P0
-    ))
-
-while(true) {
-  if(sideSensor > sideThreshold) {
-    robot.turnRight()
-    robot.moveForward(150)
-  } else if(sideSensor < sideThreshold && frontSensor > frontThreshold){
-    robot.moveForward(150)
-  } else if(sideSensor < sideThreshold && frontSensor < frontThreshold){
-    robot.turnLeft()
-  }
-}
-    robot.turnRight()
-    robot.moveForward(300)
-    robot.turnLeft()
-    robot.moveForward(150)
-    robot.turnLeft()
-    robot.moveForward(300)
-    robot.turnRight()
-    robot.moveForward(300)
-    robot.turnRight()
-    robot.moveForward(600)
-    robot.turnRight()
-    robot.moveForward(450)
-    robot.turnLeft()
-}
-`;
-
 @Component({
   moduleId: module.id,
   selector: 'hero-form',
-  templateUrl: 'hero-form.component.html'
+  templateUrl: 'hero-form.component.html',
+  styleUrls : ['hero-form.component.css']
 })
 export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
   @ViewChild(TestGraphComponent) graph:TestGraphComponent;
 
   private totalTime = 0;
   private stack: string[] = new Array();
+  private timeStack: number[] = new Array();
   config = {
     lineNumbers: true,
     mode: {
@@ -67,7 +28,8 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
     },
     theme: 'abcdef'
   };
-  code = sampleCode;
+  // code = sampleCode;
+  code = dummyCodes.sampleCode;
   submitted = false;
   onSubmit() { this.submitted = true; }
   resetForm() {
@@ -77,16 +39,28 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
 
   log = '';
   parseCodeInput(value: string): void {
-    var arrayofLines = value.split("\n");
+    var code;
+    if(value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
+      // Matches For Loop
+      code = value.match(/for\((.*?)\){([\s\S]*?)}/g);
+      console.log(code);
+      console.log(code.length);
+      code = code.toString();
+    }
+
+    var arrayofLines = code.split("\n");
     this.stack = []; // Clear array
+    this.timeStack = [];
     this.totalTime = 0; // Clear timing
     console.log("Num of line break = " + arrayofLines.length);
     for (var i = 0; i < arrayofLines.length; i++) {
       this.log += `Line${i}: `;
       this.log += `${arrayofLines[i]}\n`;
-      this.determineCmd(arrayofLines[i], this.stack);
+      this.determineCmd1(arrayofLines[i], this.stack, this.timeStack);
     }
+
     console.log("Num of command: " + this.stack.length);
+
     // for(var i=0; i<this.stack.length; i++){
     //     console.log("command["+ i + "]: " + this.stack[i]);
     // }
@@ -105,8 +79,15 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   test(): void{
-    eval("this.graph.receiveCmd(this.stack);");
-    eval("this.graph.newMove(150);");
+    eval("this.graph.receiveCmd(this.stack,this.timeStack);");
+  }
+
+  test2(): void{
+    eval("this.graph.receiveCmd1(this.stack, this.timeStack);");
+  }
+
+  forLoopTest(): void{
+    eval("this.graph.receiveCmd2(this.stack, this.timeStack);");
   }
 
   reset(): void{
@@ -134,9 +115,13 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
     eval("this.graph.moveBackward(75, 500);")
   }
 
+  rightWallFollower(): void{
+    eval("this.graph.rightWallFollower1();")
+  }
+
   private determineCmd(line: string, cmdStack: string[]): void {
       var value;
-      var cmdStringStart = "setTimeout(() => { this.graph.";
+      var cmdStringStart = "setTimeout(() => { this.";
       var cmdStringEnd = "; }, ";
       var turnTiming = 1000;
       // if (line.match(/turnLeft/g) != null) {
@@ -190,7 +175,69 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
+  private determineCmd1(line: string, cmdStack: string[], timeStack: number[]): void {
+      var value;
+      var cmdStringStart = "parent.";
+      var cmdStringEnd = "-";
+      var turnTiming = 1000;
+
+      if (line.match(/turnLeft/g) != null) {
+        value = line.substr( (line.indexOf("(") + 1) );
+        value = value.slice(0, value.indexOf(")"));
+        cmdStack.push(cmdStringStart + "turnLeft()");
+        timeStack.push(turnTiming);
+        this.totalTime+=turnTiming;
+      } else if (line.match(/turnRight/g) != null) {
+        value = line.substr( (line.indexOf("(") + 1) );
+        value = value.slice(0, value.indexOf(")"));
+        cmdStack.push(cmdStringStart + "turnRight()");
+        timeStack.push(turnTiming);
+        this.totalTime+=turnTiming;
+      } else if (line.match(/moveForward/g) != null) {
+        value = line.substr( (line.indexOf("(") + 1) );
+        value = value.slice(0, value.indexOf(")"));
+        cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value*10) + ")" );
+        timeStack.push(value*10);
+        this.totalTime+=(value*10);
+      } else if (line.match(/moveBackward/g) != null) {
+        value = line.substr( (line.indexOf("(") + 1) );
+        value = value.slice(0, value.indexOf(")"));
+        cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value*10) + ")" );
+        timeStack.push(value*10);
+        this.totalTime+=(value*10);
+      } else if (line.match(/sideThreshold =/g) != null) {
+        value = line.substr( (line.indexOf("=") + 1) );
+        cmdStack.push("sideThreshold=" + value);
+      } else if (line.match(/frontThreshold =/g) != null) {
+        value = line.substr( (line.indexOf("=") + 1) );
+        cmdStack.push("frontThreshold=" + value);
+      } else if(line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
+        // Matches For Loop
+        var value = line.substr((line.indexOf("=") + 1));
+        var initial_num = value.slice(0, value.indexOf(";"));
+        value = value.slice(value.indexOf("<") + 1);
+        var condition_num = value.slice(0, value.indexOf(";"));
+        console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
+        cmdStack.push("for-loop-start:(" + initial_num + "," + condition_num + ")");
+      } else if(line.match(/while\((.*?)\)/g) || line.match(/while \((.*?)\)/g) != null) {
+        // Matches While Loop
+        var value = line.substr((line.indexOf("(") + 1));
+        var initial_num = value.slice(0, value.indexOf(")"));
+        console.log("while loop found value:" + initial_num);
+      }
+    }
+
+  private evaluate_for_loop(cmdStack: string[]): string[]{
+    if(line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
+      // Matches For Loop
+      var value = line.substr((line.indexOf("=") + 1));
+      var initial_num = value.slice(0, value.indexOf(";"));
+      value = value.slice(value.indexOf("<") + 1);
+      var condition_num = value.slice(0, value.indexOf(";"));
+      console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
+      cmdStack.push("for-loop-start");
+  }
 
 
-}
+
 }
