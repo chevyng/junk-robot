@@ -1,4 +1,5 @@
-import { Component, OnInit, ElementRef, OnChanges, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, OnChanges, AfterViewInit, ViewChild, AfterContent } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { Hero }    from './hero';
 import { TestGraphComponent } from './graph.component';
@@ -13,14 +14,35 @@ import 'codemirror/mode/javascript/javascript';
   moduleId: module.id,
   selector: 'hero-form',
   templateUrl: 'hero-form.component.html',
-  styleUrls : ['hero-form.component.css']
+  styleUrls: ['hero-form.component.css']
 })
-export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
-  @ViewChild(TestGraphComponent) graph:TestGraphComponent;
+export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, AfterContent {
+  @ViewChild(TestGraphComponent) graph: TestGraphComponent;
 
+  id: number;
+  private loadCount = 0;
+  private sub: any;
   private totalTime = 0;
   private stack: string[] = new Array();
   private timeStack: number[] = new Array();
+
+  constructor(private route: ActivatedRoute, private router: Router) {
+    route.params.subscribe(param => {
+      this.id = param['id'];
+      console.log("When is constructor activated?");
+      if (this.loadCount != 0) {
+        console.log("This should activate now? count =" + this.loadCount);
+        //  this.reloadMaze(this.id);
+        this.router.navigateByUrl('').then(
+          () => {
+            this.router.navigateByUrl('maze/'+this.id);
+          }
+        );
+      }
+      this.loadCount++;
+      // Do your stuff with id change.
+    });
+  }
   config = {
     lineNumbers: true,
     mode: {
@@ -37,11 +59,49 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
     this.code = `reset!`;
   }
 
+  ngOnInit() {
+    this.sub = this.route.params.subscribe(params => {
+      this.id = +params['id']; // (+) converts string 'id' to a number
+      console.log("ID = " + this.id);
+      // In a real app: dispatch action to load the details here.
+    });
+  }
+
+  ngAfterViewInit() {
+    console.log("Hero form onInit");
+    if (this.id == 1) { var maze = mazeMap.mazes.maze1; }
+    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; }
+    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; }
+    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; }
+    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; }
+    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; }
+    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; }
+    else { var maze = mazeMap.mazes.emptyMaze; }
+    // var maze = mazeMap.mazes.maze2;
+    eval("this.graph.drawMaze(maze);");
+  }
+
+  ngAfterContent() {
+    console.log("Hero form doCheck");
+  }
+
+  reloadMaze(id) {
+    if (this.id == 1) { var maze = mazeMap.mazes.maze1; }
+    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; }
+    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; }
+    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; }
+    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; }
+    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; }
+    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; }
+    else { var maze = mazeMap.mazes.emptyMaze; }
+    // var maze = mazeMap.mazes.maze2;
+    eval("this.graph.drawMaze(maze);");
+  }
 
   log = '';
   parseCodeInput(value: string): void {
     var code;
-    if(value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
+    if (value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
       // Matches For Loop
       code = value.match(/for\((.*?)\){([\s\S]*?)}/g);
       console.log(code);
@@ -67,184 +127,174 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
     // }
   }
 
-  testFunc(value: string): void{
+  testFunc(value: string): void {
     console.log("Test Function");
     this.parseCodeInput(value);
     // eval("this.graph.receiveCmd(this.stack);");
-    for(var i=0; i<this.stack.length; i++){
+    for (var i = 0; i < this.stack.length; i++) {
       var t0 = performance.now();
-      console.log("command["+ i + "]: " + this.stack[i]);
+      console.log("command[" + i + "]: " + this.stack[i]);
       eval(this.stack[i]);
       console.log("Command took: " + (performance.now() - t0));
     }
   }
 
-  test(): void{
+  test(): void {
     eval("this.graph.receiveCmd(this.stack,this.timeStack);");
   }
 
-  test2(): void{
+  test2(): void {
     eval("this.graph.receiveCmd1(this.stack, this.timeStack);");
   }
 
-  test3(): void{
+  test3(): void {
     eval("this.graph.turnRight(); this.graph.moveForward(75,500);")
     // eval("eval(\"dynamicFunction();\")");
   }
 
-  maze1(){
-    var maze = mazeMap.mazes.maze3;
-    eval("this.graph.drawMaze(maze);");
-  }
-
-  maze2(){
-    var maze = mazeMap.mazes.maze2;
-    eval("this.graph.drawMaze(maze);");
-  }
-
-  forLoopTest(): void{
+  forLoopTest(): void {
     eval("this.graph.forLoopCmd(this.stack, this.timeStack);");
   }
 
-  reset(): void{
+  reset(): void {
     console.log("reset function from hero-form");
     eval("this.graph.reset();");
   }
 
-  stopRobot(): void{
+  stopRobot(): void {
     eval("this.graph.stopRobot();");
   }
 
-  turnLeft(): void{
+  turnLeft(): void {
     eval("this.graph.turnLeft();");
   }
 
-  turnRight(): void{
+  turnRight(): void {
     eval("this.graph.turnRight();");
   }
 
-  moveForward(): void{
+  moveForward(): void {
     eval("this.graph.moveForward(75, 500);")
   }
 
-  moveBackward(): void{
+  moveBackward(): void {
     eval("this.graph.moveBackward(75, 500);")
   }
 
-  rightWallFollower(): void{
+  rightWallFollower(): void {
     eval("this.graph.rightWallFollower1();")
   }
 
   private determineCmd(line: string, cmdStack: string[]): void {
-      var value;
-      var cmdStringStart = "setTimeout(() => { this.";
-      var cmdStringEnd = "; }, ";
-      var turnTiming = 1000;
-      // if (line.match(/turnLeft/g) != null) {
-      //   value = line.substr( (line.indexOf("(") + 1) );
-      //   value = value.slice(0, value.indexOf(")"));
-      //   cmdStack.push("turnLeft(" + value + ")");
-      // } else if (line.match(/turnRight/g) != null) {
-      //   value = line.substr( (line.indexOf("(") + 1) );
-      //   value = value.slice(0, value.indexOf(")"));
-      //   cmdStack.push("turnRight(" + value + ")");
-      // } else if (line.match(/moveForward/g) != null) {
-      //   value = line.substr( (line.indexOf("(") + 1) );
-      //   value = value.slice(0, value.indexOf(")"));
-      //   cmdStack.push("moveForward(" + value + "," + (value/1000) + ")");
-      // } else if (line.match(/moveBackward/g) != null) {
-      //   value = line.substr( (line.indexOf("(") + 1) );
-      //   value = value.slice(0, value.indexOf(")"));
-      //   cmdStack.push("moveBackward(" + value + "," + (value/1000) + ")");
-      // }
+    var value;
+    var cmdStringStart = "setTimeout(() => { this.";
+    var cmdStringEnd = "; }, ";
+    var turnTiming = 1000;
+    // if (line.match(/turnLeft/g) != null) {
+    //   value = line.substr( (line.indexOf("(") + 1) );
+    //   value = value.slice(0, value.indexOf(")"));
+    //   cmdStack.push("turnLeft(" + value + ")");
+    // } else if (line.match(/turnRight/g) != null) {
+    //   value = line.substr( (line.indexOf("(") + 1) );
+    //   value = value.slice(0, value.indexOf(")"));
+    //   cmdStack.push("turnRight(" + value + ")");
+    // } else if (line.match(/moveForward/g) != null) {
+    //   value = line.substr( (line.indexOf("(") + 1) );
+    //   value = value.slice(0, value.indexOf(")"));
+    //   cmdStack.push("moveForward(" + value + "," + (value/1000) + ")");
+    // } else if (line.match(/moveBackward/g) != null) {
+    //   value = line.substr( (line.indexOf("(") + 1) );
+    //   value = value.slice(0, value.indexOf(")"));
+    //   cmdStack.push("moveBackward(" + value + "," + (value/1000) + ")");
+    // }
 
-      if (line.match(/turnLeft/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        // setTimeout(() => { this.graph.turnLeft(); }, 1000);
-        cmdStack.push(cmdStringStart + "turnLeft()" + cmdStringEnd + this.totalTime + ");" );
-        this.totalTime+=turnTiming;
-      } else if (line.match(/turnRight/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "turnRight()" + cmdStringEnd + this.totalTime + ");" );
-        this.totalTime+=turnTiming;
-      } else if (line.match(/moveForward/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(","));
-        var unit = value.slice(value.indexOf("."), value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value*10) + ")"
-        + cmdStringEnd + (this.totalTime) + ");" );
-        this.totalTime+=(value*10);
-      } else if (line.match(/moveBackward/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value*10) + ")"
-        + cmdStringEnd + (this.totalTime) + ");" );
-        this.totalTime+=(value*10);
-      } else if (line.match(/sideThreshold =/g) != null) {
-        value = line.substr( (line.indexOf("=") + 1) );
-        cmdStack.push("sideThreshold=" + value);
-      } else if (line.match(/frontThreshold =/g) != null) {
-        value = line.substr( (line.indexOf("=") + 1) );
-        cmdStack.push("frontThreshold=" + value);
-      }
+    if (line.match(/turnLeft/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      // setTimeout(() => { this.graph.turnLeft(); }, 1000);
+      cmdStack.push(cmdStringStart + "turnLeft()" + cmdStringEnd + this.totalTime + ");");
+      this.totalTime += turnTiming;
+    } else if (line.match(/turnRight/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "turnRight()" + cmdStringEnd + this.totalTime + ");");
+      this.totalTime += turnTiming;
+    } else if (line.match(/moveForward/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(","));
+      var unit = value.slice(value.indexOf("."), value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value * 10) + ")"
+        + cmdStringEnd + (this.totalTime) + ");");
+      this.totalTime += (value * 10);
+    } else if (line.match(/moveBackward/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value * 10) + ")"
+        + cmdStringEnd + (this.totalTime) + ");");
+      this.totalTime += (value * 10);
+    } else if (line.match(/sideThreshold =/g) != null) {
+      value = line.substr((line.indexOf("=") + 1));
+      cmdStack.push("sideThreshold=" + value);
+    } else if (line.match(/frontThreshold =/g) != null) {
+      value = line.substr((line.indexOf("=") + 1));
+      cmdStack.push("frontThreshold=" + value);
     }
+  }
 
   private determineCmd1(line: string, cmdStack: string[], timeStack: number[]): void {
-      var value;
-      var cmdStringStart = "parent.";
-      var cmdStringEnd = "-";
-      var turnTiming = 1000;
+    var value;
+    var cmdStringStart = "parent.";
+    var cmdStringEnd = "-";
+    var turnTiming = 1000;
 
-      if (line.match(/turnLeft/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "turnLeft()");
-        timeStack.push(turnTiming);
-        this.totalTime+=turnTiming;
-      } else if (line.match(/turnRight/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "turnRight()");
-        timeStack.push(turnTiming);
-        this.totalTime+=turnTiming;
-      } else if (line.match(/moveForward/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value*10) + ")" );
-        timeStack.push(value*10);
-        this.totalTime+=(value*10);
-      } else if (line.match(/moveBackward/g) != null) {
-        value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value*10) + ")" );
-        timeStack.push(value*10);
-        this.totalTime+=(value*10);
-      } else if (line.match(/sideThreshold =/g) != null) {
-        value = line.substr( (line.indexOf("=") + 1) );
-        cmdStack.push("sideThreshold=" + value);
-      } else if (line.match(/frontThreshold =/g) != null) {
-        value = line.substr( (line.indexOf("=") + 1) );
-        cmdStack.push("frontThreshold=" + value);
-      } else if(line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
-        // Matches For Loop
-        var value = line.substr((line.indexOf("=") + 1));
-        var initial_num = value.slice(0, value.indexOf(";"));
-        value = value.slice(value.indexOf("<") + 1);
-        var condition_num = value.slice(0, value.indexOf(";"));
-        console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
-        cmdStack.push("for-loop-start:(" + initial_num + "," + condition_num + ")");
-      } else if(line.match(/while\((.*?)\)/g) || line.match(/while \((.*?)\)/g) != null) {
-        // Matches While Loop
-        var value = line.substr((line.indexOf("(") + 1));
-        var initial_num = value.slice(0, value.indexOf(")"));
-        console.log("while loop found value:" + initial_num);
-      }
+    if (line.match(/turnLeft/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "turnLeft()");
+      timeStack.push(turnTiming);
+      this.totalTime += turnTiming;
+    } else if (line.match(/turnRight/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "turnRight()");
+      timeStack.push(turnTiming);
+      this.totalTime += turnTiming;
+    } else if (line.match(/moveForward/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value * 10) + ")");
+      timeStack.push(value * 10);
+      this.totalTime += (value * 10);
+    } else if (line.match(/moveBackward/g) != null) {
+      value = line.substr((line.indexOf("(") + 1));
+      value = value.slice(0, value.indexOf(")"));
+      cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value * 10) + ")");
+      timeStack.push(value * 10);
+      this.totalTime += (value * 10);
+    } else if (line.match(/sideThreshold =/g) != null) {
+      value = line.substr((line.indexOf("=") + 1));
+      cmdStack.push("sideThreshold=" + value);
+    } else if (line.match(/frontThreshold =/g) != null) {
+      value = line.substr((line.indexOf("=") + 1));
+      cmdStack.push("frontThreshold=" + value);
+    } else if (line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
+      // Matches For Loop
+      var value = line.substr((line.indexOf("=") + 1));
+      var initial_num = value.slice(0, value.indexOf(";"));
+      value = value.slice(value.indexOf("<") + 1);
+      var condition_num = value.slice(0, value.indexOf(";"));
+      console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
+      cmdStack.push("for-loop-start:(" + initial_num + "," + condition_num + ")");
+    } else if (line.match(/while\((.*?)\)/g) || line.match(/while \((.*?)\)/g) != null) {
+      // Matches While Loop
+      var value = line.substr((line.indexOf("(") + 1));
+      var initial_num = value.slice(0, value.indexOf(")"));
+      console.log("while loop found value:" + initial_num);
     }
+  }
 
-  private evaluate_for_loop(cmdStack: string[]): string[]{
-    if(line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
+  private evaluate_for_loop(cmdStack: string[]): string[] {
+    if (line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
       // Matches For Loop
       var value = line.substr((line.indexOf("=") + 1));
       var initial_num = value.slice(0, value.indexOf(";"));
@@ -252,8 +302,8 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
       var condition_num = value.slice(0, value.indexOf(";"));
       console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
       cmdStack.push("for-loop-start");
+    }
+
+
+
   }
-
-
-
-}

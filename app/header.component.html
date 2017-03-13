@@ -7,10 +7,10 @@
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
       <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        <a class="nav-link"  routerLink="">Home <span class="sr-only">(current)</span></a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">About</a>
+        <a class="nav-link" routerLink="about">About</a>
       </li>
       <li class="nav-item">
         <a class="nav-link disabled" href="#">Tutorials</a>
@@ -19,13 +19,13 @@
       <div ngbDropdown class="d-inline-block">
         <button class="btn btn-outline-secondary" id="dropdownMenu1" ngbDropdownToggle>Mazes</button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenu1">
-          <button class="dropdown-item" (click)="maze1();">Maze 1</button>
-          <button class="dropdown-item">Maze 2</button>
-          <button class="dropdown-item">Maze 3</button>
-          <button class="dropdown-item">Maze 4</button>
-          <button class="dropdown-item">Maze 5</button>
-          <button class="dropdown-item">Maze 6</button>
-          <button class="dropdown-item">Maze 7</button>
+          <button class="dropdown-item" routerLink="/maze/1">Maze 1</button>
+          <button class="dropdown-item" routerLink="/maze/2">Maze 2</button>
+          <button class="dropdown-item" routerLink="/maze/3">Maze 3</button>
+          <button class="dropdown-item" routerLink="/maze/4">Maze 4</button>
+          <button class="dropdown-item" routerLink="/maze/5">Maze 5</button>
+          <button class="dropdown-item" routerLink="/maze/6">Maze 6</button>
+          <button class="dropdown-item" routerLink="/maze/7">Maze 7</button>
         </div>
       </div>
     </ul>

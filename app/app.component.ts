@@ -1,7 +1,12 @@
 import { Component } from '@angular/core';
+import { HeaderComponent } from './header.component';
+
 
 @Component({
   selector: 'my-app',
-  template: '<hero-form></hero-form>'
+  template: `
+    <header-component></header-component>
+    <router-outlet></router-outlet>
+  `
 })
 export class AppComponent { }
