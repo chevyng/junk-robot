@@ -4,6 +4,7 @@ import { Hero }    from './hero';
 import { TestGraphComponent } from './graph.component';
 import { HeaderComponent } from './header.component';
 import dummyCodes from "./dummyCodes";
+import mazeMap from "./graph/maze/mazes";
 import 'codemirror/mode/clike/clike';
 import 'codemirror/lib/codemirror';
 import 'codemirror/mode/javascript/javascript';
@@ -86,8 +87,23 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
     eval("this.graph.receiveCmd1(this.stack, this.timeStack);");
   }
 
+  test3(): void{
+    eval("this.graph.turnRight(); this.graph.moveForward(75,500);")
+    // eval("eval(\"dynamicFunction();\")");
+  }
+
+  maze1(){
+    var maze = mazeMap.mazes.maze3;
+    eval("this.graph.drawMaze(maze);");
+  }
+
+  maze2(){
+    var maze = mazeMap.mazes.maze2;
+    eval("this.graph.drawMaze(maze);");
+  }
+
   forLoopTest(): void{
-    eval("this.graph.receiveCmd2(this.stack, this.timeStack);");
+    eval("this.graph.forLoopCmd(this.stack, this.timeStack);");
   }
 
   reset(): void{
@@ -155,8 +171,8 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit {
         this.totalTime+=turnTiming;
       } else if (line.match(/moveForward/g) != null) {
         value = line.substr( (line.indexOf("(") + 1) );
-        value = value.slice(0, value.indexOf(")"));
-        //    setTimeout(() => { this.moveForward(200, 2); }, 2000);
+        value = value.slice(0, value.indexOf(","));
+        var unit = value.slice(value.indexOf("."), value.indexOf(")"));
         cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value*10) + ")"
         + cmdStringEnd + (this.totalTime) + ");" );
         this.totalTime+=(value*10);

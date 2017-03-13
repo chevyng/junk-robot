@@ -61,7 +61,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   private side_sensor;
   private sideThreshold;
   private frontThreshold;
-  private crash;
+  private crash
+  private svg;
 
   constructor(element: ElementRef) {
     this.el = element;
@@ -71,6 +72,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   ngOnInit() {
     this.setup();
     this.draw();
+    this.drawMaze(mazeMap.mazes.emptyMaze);
   }
 
   ngAfterViewInit() {
@@ -78,6 +80,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   ngOnChange() {
+    console.log("When is OnChange executed?");
   }
 
   private setup(): void {
@@ -101,17 +104,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.crash = 0;
   }
 
-  private map_maze(): void {
-    var totalLines = mazeMap.mazes.maze1.length;
-    this.linesName = new Array(totalLines);
-    for (var i = 0; i < totalLines; i++) {
-      this.linesName[i] = mazeMap.mazes.maze1[i].name;
-      // console.log(this.linesName[i]);
-    }
-  }
-
-  private draw(): void {
-    var svg = d3.select(this.el.nativeElement).select("div")
+  public draw(): void {
+    this.svg = d3.select(this.el.nativeElement).select("div")
       .append("svg")
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
@@ -139,22 +133,16 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .tickSize(-this.width)
       .tickFormat(formatLength);
 
-    svg.append("g")
+    this.svg.append("g")
       .attr("class", "grid")
       .attr("transform", "translate(0," + this.height + ")")
       .call(xAxis);
 
-    svg.append("g")
+    this.svg.append("g")
       .attr("class", "grid")
       .call(yAxis);
 
-    var endmazes = svg.append("g")
-      .attr("class", "end-maze")
-      .append("path")
-      .attr("d", mazeEnd.end.R4C6)
-      .style("fill", "#AFFFBA");
-
-    this.robot = svg.append("g")
+    this.robot = this.svg.append("g")
       .attr("class", "robot");
 
     this.robot.append("rect")
@@ -189,22 +177,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("r", function(d) { return d.radius; })
       .style("fill", "black");
 
-    var mazes = svg.append("g")
-      .attr("class", "maze")
-      .selectAll("line")
-      .data(mazeMap.mazes.maze1)
-      .enter()
-      .append("line");
-
-    var mazeInput = mazes
-      .attr("x1", function(d) { return d.x1; })
-      .attr("y1", function(d) { return d.y1; })
-      .attr("x2", function(d) { return d.x2; })
-      .attr("y2", function(d) { return d.y2; })
-      .attr("stroke-width", 9)
-      .attr("stroke", "black");
-
-    var sensors = svg.append("g")
+    var sensors = this.svg.append("g")
       .attr("class", "sensors");
 
     var front_sensorText = sensors.append("text")
@@ -235,7 +208,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       .style("fill", "black")
       .attr("transform", "translate(90,30)");
 
-    this.map_maze();
     this.robot.attr("transform", "translate(" + (0 + this.xGap) + "," + ((this.scale * 3) + this.yGap) + ")")
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
 
@@ -265,6 +237,42 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         z
       `;
     }
+
+  private map_maze(maze): void {
+    var totalLines = maze.length;
+    this.linesName = new Array(totalLines);
+    for (var i = 0; i < totalLines; i++) {
+      this.linesName[i] = maze[i].name;
+      console.log(this.linesName[i]);
+    }
+  }
+
+  public drawMaze(maze): void {
+    //TODO: Clear the maze
+
+    var endmazes = this.svg.append("g")
+      .attr("class", "end-maze")
+      .append("path")
+      .attr("d", mazeEnd.end.R1C6)
+      .style("fill", "#AFFFBA");
+
+    var mazes = this.svg.append("g")
+      .attr("class", "maze")
+      .selectAll("line")
+      .data(maze)
+      .enter()
+      .append("line");
+
+    var mazeInput = mazes
+      .attr("x1", function(d) { return d.x1; })
+      .attr("y1", function(d) { return d.y1; })
+      .attr("x2", function(d) { return d.x2; })
+      .attr("y2", function(d) { return d.y2; })
+      .attr("stroke-width", 9)
+      .attr("stroke", "black");
+
+    this.map_maze(maze);
+  }
 
   private updateRobot(value: number): void {
     if (this.angle == 360 || this.angle == -360) {
@@ -363,7 +371,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
   }
 
-  private turnRight(): void {
+  public turnRight(): void {
     console.log("turn function");
     this.checkPosition();
     var rotate = this.angle;
@@ -387,7 +395,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.prevCmd = "turnRight";
   }
 
-  private turnLeft(): void {
+  public turnLeft(): void {
     console.log("turn function");
     this.checkPosition();
     var rotate = this.angle;
@@ -434,7 +442,6 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   // Row > 4 -> (yCoord + 25)
   // Col < 1 -> (xCoord - 25)
   // Col > 6 -> (xCoord + 25)
-
   private move(duration: number, front: number, side: number): void {
     //Default 1s if none is provided
     if (duration == null) { duration = 1000; console.log("Why am i here"); }
@@ -464,7 +471,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       });
   }
 
-  private moveBackward(value: number, duration: number): void {
+  public moveBackward(value: number, duration: number): void {
     console.log("Before checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
     this.check_frontSensor();
     console.log("After checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
@@ -805,7 +812,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  rightWallFollower1(): void {
+  public rightWallFollower1(): void {
     var parent = this;
     parent.turnRight(); //Callibrate sensor
     parent.turnLeft();
@@ -839,7 +846,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(200, 0);
   }
 
-  receiveCmd(cmdStack: string[], timeStack: number[]): void {
+  public receiveCmd(cmdStack: string[], timeStack: number[]): void {
     console.log("CmdStack size=" + cmdStack.length);
     for (var i = 0; i < cmdStack.length; i++) {
       console.log("command[" + i + "]: " + cmdStack[i]);
@@ -878,7 +885,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(cmdStack,timeStack, 0);
   }
 
-  receiveCmd2(cmdStack: string[], timeStack: number[]): void {
+  forLoopCmd(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
     console.log("CmdStack size=" + cmdStack.length);
     var initial_num;
