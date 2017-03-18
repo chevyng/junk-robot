@@ -243,17 +243,16 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.linesName = new Array(totalLines);
     for (var i = 0; i < totalLines; i++) {
       this.linesName[i] = maze[i].name;
-      console.log(this.linesName[i]);
+      // console.log(this.linesName[i]);
     }
   }
 
-  public drawMaze(maze): void {
-    //TODO: Clear the maze
-
+  public drawMaze(maze,mazeGoal): void {
+    console.log("Maze goal:" + mazeGoal);
     var endmazes = this.svg.append("g")
       .attr("class", "end-maze")
       .append("path")
-      .attr("d", mazeEnd.end.R1C6)
+      .attr("d", mazeGoal)
       .style("fill", "#AFFFBA");
 
     var mazes = this.svg.append("g")

@@ -4,8 +4,11 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { Hero }    from './hero';
 import { TestGraphComponent } from './graph.component';
 import { HeaderComponent } from './header.component';
+
 import dummyCodes from "./dummyCodes";
 import mazeMap from "./graph/maze/mazes";
+import mazeEnd from "./graph/maze/mazeEnd";
+
 import 'codemirror/mode/clike/clike';
 import 'codemirror/lib/codemirror';
 import 'codemirror/mode/javascript/javascript';
@@ -69,47 +72,33 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
 
   ngAfterViewInit() {
     console.log("Hero form onInit");
-    if (this.id == 1) { var maze = mazeMap.mazes.maze1; }
-    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; }
-    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; }
-    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; }
-    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; }
-    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; }
-    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; }
-    else { var maze = mazeMap.mazes.emptyMaze; }
-    // var maze = mazeMap.mazes.maze2;
-    eval("this.graph.drawMaze(maze);");
-  }
-
-  ngAfterContent() {
-    console.log("Hero form doCheck");
+    this.reloadMaze(this.id);
   }
 
   reloadMaze(id) {
-    if (this.id == 1) { var maze = mazeMap.mazes.maze1; }
-    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; }
-    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; }
-    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; }
-    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; }
-    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; }
-    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; }
+    if (this.id == 1) { var maze = mazeMap.mazes.maze1; var mazeGoal = mazeEnd.maze1.goal; }
+    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; var mazeGoal = mazeEnd.maze2.goal;}
+    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; var mazeGoal = mazeEnd.maze3.goal;}
+    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; var mazeGoal = mazeEnd.maze4.goal;}
+    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; var mazeGoal = mazeEnd.maze5.goal;}
+    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; var mazeGoal = mazeEnd.maze6.goal;}
+    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; var mazeGoal = mazeEnd.maze7.goal;}
     else { var maze = mazeMap.mazes.emptyMaze; }
-    // var maze = mazeMap.mazes.maze2;
-    eval("this.graph.drawMaze(maze);");
+    eval("this.graph.drawMaze(maze,mazeGoal);");
   }
 
   log = '';
   parseCodeInput(value: string): void {
     var code;
-    if (value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
-      // Matches For Loop
-      code = value.match(/for\((.*?)\){([\s\S]*?)}/g);
-      console.log(code);
-      console.log(code.length);
-      code = code.toString();
-    }
+    // if (value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
+    //   // Matches For Loop
+    //   code = value.match(/for\((.*?)\){([\s\S]*?)}/g);
+    //   console.log(code);
+    //   console.log(code.length);
+    //   code = code.toString();
+    // }
 
-    var arrayofLines = code.split("\n");
+    var arrayofLines = value.split("\n");
     this.stack = []; // Clear array
     this.timeStack = [];
     this.totalTime = 0; // Clear timing
