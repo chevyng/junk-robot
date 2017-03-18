@@ -1,7 +1,4 @@
-<header-component></header-component>
-
 <div class="container">
-    <!-- <div  [hidden]="submitted"> -->
       <h1>Robot Simulator</h1>
       <form (ngSubmit)="onSubmit()" #heroForm="ngForm" id="mainForm">
         <!-- <label for="d3-graph">D3Graph</label> -->
@@ -17,7 +14,6 @@
             <p></p>
             <button type="button" class="btn btn-default" (click)="test();"> Test </button>
             <button type="button" class="btn btn-default" (click)="test2();"> Test 2 </button>
-            <button type="button" class="btn btn-default" (click)="forLoopTest();"> For Loop Test </button>
             <p></p>
             <button type="button" class="btn btn-primary" (click)="moveForward();"> Move forward </button>
             <p></p>
@@ -29,7 +25,8 @@
 
             <p></p>
             <button type="button" class="btn btn-success" (click)="rightWallFollower();"> Wall Follower </button>
-
+            <p></p>
+            <button type="button" class="btn btn-success" (click)="forLoopTest();"> For Loop Test </button>
           </div>
         </div>
 

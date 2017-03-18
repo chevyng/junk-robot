@@ -2,6 +2,7 @@ import mapLines from "./lines";
 
 export default {
  mazes : {
+    "emptyMaze": [],
     "testMaze": [
       mapLines.vertical.C1R1,
       mapLines.vertical.C4R2,
@@ -30,7 +31,7 @@ export default {
       mapLines.horizontal.R2C2,
       mapLines.horizontal.R2C3,
       mapLines.horizontal.R3C1,
-      mapLines.horizontal.R3C2
+      mapLines.horizontal.R3C2,
     ],
     "maze2": [
       mapLines.vertical.C1R2,
