@@ -56,7 +56,7 @@
       rxjs: {
         defaultExtension: 'js'
       },
-      'ng2-codemirror': { main: 'lib/Codemirror.js', defaultExtension: 'js' },
+      'ng2-codemirror': { main: 'lib/index.js', defaultExtension: 'js' },
       'codemirror': { main: 'lib/codemirror.js', defaultExtension: 'js' },
       'd3': { "main": 'build/d3.min.js', "defaultExtension": "js"},
       'd3-array': { "main": 'build/d3-array.min.js', "defaultExtension": "js"},
