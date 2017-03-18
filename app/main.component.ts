@@ -1,8 +1,7 @@
 import { Component, OnInit, ElementRef, OnChanges, AfterViewInit, ViewChild, AfterContent } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { Hero }    from './hero';
-import { TestGraphComponent } from './graph.component';
+import { GraphComponent } from './graph.component';
 import { HeaderComponent } from './header.component';
 
 import dummyCodes from "./dummyCodes";
@@ -15,12 +14,12 @@ import 'codemirror/mode/javascript/javascript';
 
 @Component({
   moduleId: module.id,
-  selector: 'hero-form',
-  templateUrl: 'hero-form.component.html',
-  styleUrls: ['hero-form.component.css']
+  selector: 'main',
+  templateUrl: 'main.component.html',
+  styleUrls: ['main.component.css']
 })
-export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, AfterContent {
-  @ViewChild(TestGraphComponent) graph: TestGraphComponent;
+export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterContent {
+  @ViewChild(GraphComponent) graph: GraphComponent;
 
   id: number;
   private loadCount = 0;
@@ -32,10 +31,7 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
   constructor(private route: ActivatedRoute, private router: Router) {
     route.params.subscribe(param => {
       this.id = param['id'];
-      console.log("When is constructor activated?");
       if (this.loadCount != 0) {
-        console.log("This should activate now? count =" + this.loadCount);
-        //  this.reloadMaze(this.id);
         this.router.navigateByUrl('').then(
           () => {
             this.router.navigateByUrl('maze/'+this.id);
@@ -43,7 +39,6 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
         );
       }
       this.loadCount++;
-      // Do your stuff with id change.
     });
   }
   config = {
@@ -54,7 +49,6 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
     },
     theme: 'abcdef'
   };
-  // code = sampleCode;
   code = dummyCodes.sampleCode;
   submitted = false;
   onSubmit() { this.submitted = true; }
@@ -71,8 +65,9 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
   }
 
   ngAfterViewInit() {
-    console.log("Hero form onInit");
     this.reloadMaze(this.id);
+    this.graph.turnLeft();
+    this.graph.turnRight();
   }
 
   reloadMaze(id) {
@@ -88,7 +83,8 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
   }
 
   log = '';
-  parseCodeInput(value: string): void {
+
+  public parseCodeInput(value: string): void {
     var code;
     // if (value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
     //   // Matches For Loop
@@ -97,7 +93,8 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
     //   console.log(code.length);
     //   code = code.toString();
     // }
-
+    // console.log(value);
+    this.scenarioParser(value);
     var arrayofLines = value.split("\n");
     this.stack = []; // Clear array
     this.timeStack = [];
@@ -116,29 +113,17 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
     // }
   }
 
-  testFunc(value: string): void {
-    console.log("Test Function");
-    this.parseCodeInput(value);
-    // eval("this.graph.receiveCmd(this.stack);");
-    for (var i = 0; i < this.stack.length; i++) {
-      var t0 = performance.now();
-      console.log("command[" + i + "]: " + this.stack[i]);
-      eval(this.stack[i]);
-      console.log("Command took: " + (performance.now() - t0));
-    }
-  }
-
   test(): void {
     eval("this.graph.receiveCmd(this.stack,this.timeStack);");
   }
 
   test2(): void {
-    eval("this.graph.receiveCmd1(this.stack, this.timeStack);");
+    // eval("this.graph.receiveCmd1(this.stack, this.timeStack);");
+    eval("this.graph.scenario3D();");
   }
 
   test3(): void {
     eval("this.graph.turnRight(); this.graph.moveForward(75,500);")
-    // eval("eval(\"dynamicFunction();\")");
   }
 
   forLoopTest(): void {
@@ -171,7 +156,7 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
   }
 
   rightWallFollower(): void {
-    eval("this.graph.rightWallFollower1();")
+    eval("this.graph.finalScenario();")
   }
 
   private determineCmd(line: string, cmdStack: string[]): void {
@@ -274,7 +259,8 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
       var condition_num = value.slice(0, value.indexOf(";"));
       console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
       cmdStack.push("for-loop-start:(" + initial_num + "," + condition_num + ")");
-    } else if (line.match(/while\((.*?)\)/g) || line.match(/while \((.*?)\)/g) != null) {
+    }
+    else if (line.match(/while\((.*?)\)/g) || line.match(/while \((.*?)\)/g) != null) {
       // Matches While Loop
       var value = line.substr((line.indexOf("(") + 1));
       var initial_num = value.slice(0, value.indexOf(")"));
@@ -292,6 +278,31 @@ export class HeroFormComponent implements OnInit, OnChanges, AfterViewInit, Afte
       console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
       cmdStack.push("for-loop-start");
     }
+
+
+  public scenarioParser(code: string): void {
+    if(code.includes("while (steps < target_distance) {" )) {
+      console.log("Inside scenario 1.4!");
+    }
+    else if(code.includes(`while (front_sensor > front_threshold) {\n    robot.moveForward(`) ||
+            code.includes(`while (frontSensor > frontThreshold) {\n    robot.moveForward(`)){
+      console.log("Inside scenario 2.1")
+    }
+    else if(code.includes(`while (true) {\n    if (front_sensor < front_threshold) {\n        robot.moveBackward(`) ||
+            code.includes(`while (true) {\n    if (frontSensor < frontThreshold) {\n        robot.moveBackward(`) ||
+            code.includes(`while (true) {\n    if (front_sensor > front_threshold) {\n        robot.moveForward(`) ||
+            code.includes(`while (true) {\n    if (frontSensor > frontThreshold) {\n        robot.moveForward(`) ){
+      console.log("Inside scenario 2.2!");
+    }
+    else if(code.includes(`while (true) {\n    if (front_sensor < front_threshold) {\n        robot.turnRight()`) ||
+            code.includes(`while (true) {\n    if (frontSensor < frontThreshold) {\n        robot.turnRight()`) ){
+      console.log("Inside scenario 2.3!");
+    }
+    else if(code.includes(`while (true) {\n    if (side_sensor > side_threshold) {\n        robot.turnRight()\n        robot.moveForward`) ||
+            code.includes(`while (true) {\n    if (sideSensor > sideThreshold) {\n        robot.turnRight()\n        robot.moveForward`) ){
+      console.log("Inside right wall follower!");
+    }
+  }
 
 
 

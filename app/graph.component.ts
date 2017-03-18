@@ -36,7 +36,7 @@ import * as d3 from 'd3';
 
     `]
 })
-export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
+export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
   private el: any;
   private host;
@@ -55,12 +55,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
   private prevCmd: string;
   private direction; // 1 = North, 2 = East, 3 = South, 4 = West
   private linesName;
-  private front_sensor_reading;
-  private front_sensor;
-  private side_sensor_reading;
-  private side_sensor;
-  private sideThreshold;
-  private frontThreshold;
+  public front_sensor_reading, front_sensor, front_threshold;
+  public side_sensor_reading, side_sensor, side_threshold;
   private crash
   private svg;
 
@@ -68,19 +64,10 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.el = element;
   }
 
-
   ngOnInit() {
     this.setup();
     this.draw();
     this.drawMaze(mazeMap.mazes.emptyMaze);
-  }
-
-  ngAfterViewInit() {
-    console.log("Is this executed?");
-  }
-
-  ngOnChange() {
-    console.log("When is OnChange executed?");
   }
 
   private setup(): void {
@@ -97,8 +84,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.xCoord = 0 + this.xGap;
     this.yCoord = (this.scale * 3) + this.yGap;
     this.direction = 1;
-    this.sideThreshold = 36;
-    this.frontThreshold = 26;
+    this.side_threshold = 36;
+    this.front_threshold = 26;
     this.side_sensor_reading = 100;
     this.front_sensor_reading = 25;
     this.crash = 0;
@@ -243,12 +230,10 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.linesName = new Array(totalLines);
     for (var i = 0; i < totalLines; i++) {
       this.linesName[i] = maze[i].name;
-      // console.log(this.linesName[i]);
     }
   }
 
-  public drawMaze(maze,mazeGoal): void {
-    console.log("Maze goal:" + mazeGoal);
+  public drawMaze(maze, mazeGoal): void {
     var endmazes = this.svg.append("g")
       .attr("class", "end-maze")
       .append("path")
@@ -279,7 +264,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
 
 
-    var front,side;
+    var front, side;
     var currentAngle = this.angle;
     //Turn right
     if (value > 0) {
@@ -365,7 +350,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
         return function(t) { that.text(format(i(t))); };
       });
 
-    this.update_frontSensor(front,side);
+    this.update_frontSensor(front, side);
 
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
   }
@@ -417,19 +402,19 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.prevCmd = "turnLeft";
   }
 
-  reset(): void {
+  public reset(): void {
     console.log("reset function");
     this.angle = 0;
     this.direction = 1;
     this.xCoord = 0 + this.xGap;
     this.yCoord = (this.scale * 3) + this.yGap;
     this.crash = 0;
-    this.front_sensor_reading = 100;
-    this.side_sensor_reading = 100;
     this.robot.attr("transform", "translate(" + this.xCoord + "," + this.yCoord + ")");
+    this.turnLeft();
+    this.turnRight();
   }
 
-  stopRobot(): void {
+  public stopRobot(): void {
     console.log("stop function");
     this.crash = 1;
   }
@@ -477,23 +462,23 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     if (this.angle == 0) {
       this.yCoord += value;
-      if(this.yCoord > (this.scale*4 - robotDimension.base.height)) {
-        this.yCoord = (this.scale*4 - robotDimension.base.height);
+      if (this.yCoord > (this.scale * 4 - robotDimension.base.height)) {
+        this.yCoord = (this.scale * 4 - robotDimension.base.height);
       }
     } else if (this.angle == 90 || this.angle == -270) {
       this.xCoord -= value;
-      if(this.xCoord < robotDimension.base.height){
+      if (this.xCoord < robotDimension.base.height) {
         this.xCoord = robotDimension.base.height;
       };
     } else if (this.angle == 180 || this.angle == -180) {
       this.yCoord -= value;
-      if(this.yCoord < robotDimension.base.height) {
+      if (this.yCoord < robotDimension.base.height) {
         this.yCoord = robotDimension.base.height;
       }
     } else if (this.angle == 270 || this.angle == -90) {
       this.xCoord += value;
-      if(this.xCoord > (this.scale*6 - robotDimension.base.height)) {
-        this.xCoord = (this.scale*6 - robotDimension.base.height);
+      if (this.xCoord > (this.scale * 6 - robotDimension.base.height)) {
+        this.xCoord = (this.scale * 6 - robotDimension.base.height);
       }
     }
 
@@ -530,7 +515,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
     console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
-    this.move(duration,front,side);
+    this.move(duration, front, side);
     this.prevCmd = "moveBackward";
   }
 
@@ -538,8 +523,8 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     var crash = 0;
 
     console.log("Before checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
-    if(this.prevCmd == "turnRight" || this.prevCmd == "turnLeft"){
-      if(value >= this.front_sensor_reading) {
+    if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
+      if (value >= this.front_sensor_reading) {
         console.log("Robot gonna crash! front sensor=" + this.front_sensor_reading);
         console.log("Setting max distance to front sensor value!");
         value = this.front_sensor_reading;
@@ -547,22 +532,22 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
-    if(this.front_sensor_reading!=0) { this.check_frontSensor(); }
+    if (this.front_sensor_reading != 0) { this.check_frontSensor(); }
     console.log("After checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
 
-    if(this.prevCmd != "turnRight" || this.prevCmd != "turnLeft"){
-        if(value >= this.front_sensor_reading || this.front_sensor_reading == this.scale) {
-          console.log("Robot gonna crash! front sensor=" + this.front_sensor_reading);
-          if(this.front_sensor_reading == value || this.front_sensor_reading == this.scale){
-            value = 0;
-            crash = 1;
-            console.log("Already at wall!! setting front value to 0" );
-          } else {
-            value = this.front_sensor_reading;
-            crash = 1;
-            console.log("Setting max distance to front sensor value to" + value);
-          }
+    if (this.prevCmd != "turnRight" || this.prevCmd != "turnLeft") {
+      if (value >= this.front_sensor_reading || this.front_sensor_reading == this.scale) {
+        console.log("Robot gonna crash! front sensor=" + this.front_sensor_reading);
+        if (this.front_sensor_reading == value || this.front_sensor_reading == this.scale) {
+          value = 0;
+          crash = 1;
+          console.log("Already at wall!! setting front value to 0");
+        } else {
+          value = this.front_sensor_reading;
+          crash = 1;
+          console.log("Setting max distance to front sensor value to" + value);
         }
+      }
 
     }
 
@@ -609,7 +594,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
 
-    if(crash) {
+    if (crash) {
       front = 0;
       this.crash = crash;
     }
@@ -646,7 +631,7 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  private check_frontSensor(): void {
+  public check_frontSensor(): void {
     if (this.direction == 1) {
       this.front_sensor_reading = this.yCoord - this.check_obstacle(1);
       this.side_sensor_reading = this.check_obstacle(2) - (this.xCoord + robotDimension.base.width);
@@ -811,80 +796,46 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  public rightWallFollower1(): void {
-    var parent = this;
-    parent.turnRight(); //Callibrate sensor
-    parent.turnLeft();
-    function rightWallFollower(): void {
-      console.log("front-sensor threshold:" + parent.frontThreshold + " , side-sensor threshold:" + parent.sideThreshold);
-      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
-      if(parent.side_sensor_reading > parent.sideThreshold) {
-          setTimeout(() => { parent.turnRight(); }, 0);
-          setTimeout(() => { parent.moveForward(150,1000); },  1000);
-          console.log("Inside 1st scenario");
-      } else if(parent.side_sensor_reading < parent.sideThreshold &&
-        parent.front_sensor_reading > parent.frontThreshold) {
-          setTimeout(() => { parent.moveForward(150,1000); }, 1000);
-          console.log("Inside 2nd scenario");
-      } else if(parent.side_sensor_reading < parent.sideThreshold &&
-        parent.front_sensor_reading < parent.frontThreshold) {
-          setTimeout(() => { parent.turnLeft(); }, 1000);
-          console.log("Inside 3rd scenario");
-        }
-    }
-
-    function recursion(num, i): void {
-        rightWallFollower();
-        i += 1;
-        if(i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"; return; };
-        console.log("Inside recursion | i=" + i);
-
-        setTimeout(function() { recursion(num, i); }, 1750);
-    }
-
-    recursion(200, 0);
-  }
-
   public receiveCmd(cmdStack: string[], timeStack: number[]): void {
     console.log("CmdStack size=" + cmdStack.length);
     for (var i = 0; i < cmdStack.length; i++) {
       console.log("command[" + i + "]: " + cmdStack[i]);
-      if (cmdStack[i].match(/sideThreshold/g) != null) {
+      if (cmdStack[i].match(/side_threshold/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
-        this.sideThreshold = value;
-        cmdStack.splice(i,1);
-        console.log("sideThreshold updated to :" + this.sideThreshold);
+        this.side_threshold = value;
+        cmdStack.splice(i, 1);
+        console.log("side_threshold updated to :" + this.side_threshold);
       }
 
-      if (cmdStack[i].match(/frontThreshold/g) != null) {
+      if (cmdStack[i].match(/front_threshold/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
-        this.frontThreshold = value;
-        cmdStack.splice(i,1);
-        console.log("frontThreshold updated to :" + this.frontThreshold);
+        this.front_threshold = value;
+        cmdStack.splice(i, 1);
+        console.log("front_threshold updated to :" + this.front_threshold);
       }
 
     }
 
-    for (var i = 0 ; i < cmdStack.length; i++){
+    for (var i = 0; i < cmdStack.length; i++) {
       // console.log("new command[" + i + "]: " + cmdStack[i] + " | time:" + timeStack[i]);
     }
   }
 
-  receiveCmd1(cmdStack: string[],timeStack: number[]): void {
+  public receiveCmd1(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
     function recursion(cmdStack, timeStack, i): void {
-        eval(cmdStack[i]);
-        i += 1;
-        if(i >= cmdStack.length || parent.crash == 1) { console.log("Finish executing/Robot crashed!"; return; };
-        console.log("Inside recursion | i=" + i);
+      eval(cmdStack[i]);
+      i += 1;
+      if (i >= cmdStack.length || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
+      console.log("Inside recursion | i=" + i);
 
-        setTimeout(function() { recursion(cmdStack, timeStack, i); }, timeStack[i-1]);
+      setTimeout(function() { recursion(cmdStack, timeStack, i); }, timeStack[i - 1]);
     }
 
-    recursion(cmdStack,timeStack, 0);
+    recursion(cmdStack, timeStack, 0);
   }
 
-  forLoopCmd(cmdStack: string[], timeStack: number[]): void {
+  public forLoopCmd(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
     console.log("CmdStack size=" + cmdStack.length);
     var initial_num;
@@ -895,57 +846,121 @@ export class TestGraphComponent implements OnInit, OnChanges, AfterViewInit {
       if (cmdStack[i].match(/for-loop-start/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
         initial_num = value.slice(0, value.indexOf(","));
-        condition_num = value.slice(value.indexOf(",")+1, value.indexOf(")"));
+        condition_num = value.slice(value.indexOf(",") + 1, value.indexOf(")"));
         console.log("For loop-> initial_num:" + initial_num + " | condition:" + condition_num);
-        cmdStack.splice(i,1);
+        cmdStack.splice(i, 1);
       }
 
     }
 
-    for (var i = 0 ; i < cmdStack.length; i++){
+    for (var i = 0; i < cmdStack.length; i++) {
       console.log("new command[" + i + "]: " + cmdStack[i] + " | time:" + timeStack[i]);
     }
     function recursion(cmdStack, timeStack, i, j): void {
-        eval(cmdStack[j]);
-        i += 1;
-        j += 1;
-        if(i >= (parseInt(condition_num)*(cmdStack.length+1)) || parent.crash == 1) { console.log("Finish executing/Robot crashed!"; return; };
-        console.log("Inside recursion | i=" + i);
-        if((i%(cmdStack.length+1)) == 0) { j = 0; }
-        setTimeout(function() { recursion(cmdStack, timeStack, i, j); }, timeStack[j-1]);
+      eval(cmdStack[j]);
+      i += 1;
+      j += 1;
+      if (i >= (parseInt(condition_num) * (cmdStack.length + 1)) || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
+      console.log("Inside recursion | i=" + i);
+      if ((i % (cmdStack.length + 1)) == 0) { j = 0; }
+      setTimeout(function() { recursion(cmdStack, timeStack, i, j); }, timeStack[j - 1]);
     }
 
-    recursion(cmdStack,timeStack, parseInt(initial_num), 0);
-
+    recursion(cmdStack, timeStack, parseInt(initial_num), 0);
   }
 
+  public scenario2D(distance: number): void {
+    this.moveForward(distance, distance * 30);
+  }
 
-  test(): void {
-    var timing = 0;
-    var complete = false;
-    console.log("Am I inside test");
-    for(var i=0; i<4; i++){
-      if(!complete){
-        if(this.side_sensor_reading > this.sideThreshold) {
-            setTimeout(() => { this.turnRight(); }, timing * 1000);
-            timing += 1;
-            setTimeout(() => { this.moveForward(150,1000); }, timing * 1000);
-            timing += 1;
-            complete = true;
-            console.log("Inside 1st scenario");
-        } else if(this.side_sensor_reading < this.sideThreshold &&
-          this.front_sensor_reading > this.frontThreshold) {
-            setTimeout(() => { this.moveForward(150,1000); }, timing * 1000);
-            timing += 1;
-            complete = 1;
-            console.log("Inside 2nd scenario");
-        } else if(this.side_sensor_reading < this.sideThreshold &&
-          this.front_sensor_reading < this.frontThreshold) {
-            setTimeout(() => { this.turnLeft(); }, timing * 1000);
-            timing += 1;
-            complete = 1;
-            console.log("Inside 3rd scenario");
-          }
-        }
+  public scenario3B(): void {
+    this.front_threshold = 100;
+    var distance = this.front_sensor_reading - this.front_threshold;
+    this.moveForward(distance, distance * 30);
+  }
+
+  public scenario3C(): void {
+    var parent = this;
+    function scenario3Ci(): void {
+      console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
+      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
+      if (parent.front_sensor_reading > parent.front_threshold) {
+        setTimeout(() => { parent.moveForward(5, 33); }, 33);
+        console.log("Inside 1st scenario");
+      } else {
+        setTimeout(() => { parent.moveBackward(5, 33); }, 33);
+        console.log("Inside 2nd scenario");
       }
     }
+
+    function recursion(num, i): void {
+      scenario3Ci();
+      i += 1;
+      if (i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; }
+      console.log("Inside recursion | i=" + i);
+
+      setTimeout(function() { recursion(num, i); }, 200);
+    }
+
+    recursion(200, 0);
+  }
+
+  public scenario3D(): void {
+    var parent = this;
+    function scenario3Di(): void {
+      console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
+      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
+      if (parent.front_sensor_reading < parent.front_threshold) {
+        setTimeout(() => { parent.turnRight(); }, 1000);
+        console.log("Inside 1st scenario");
+      } else {
+        setTimeout(() => { parent.moveForward(150, 1000); }, 1000);
+        console.log("Inside 2nd scenario");
+      }
+    }
+
+    function recursion(num, i): void {
+      scenario3Di();
+      i += 1;
+      if (i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; }
+      console.log("Inside recursion | i=" + i);
+
+      setTimeout(function() { recursion(num, i); }, 1000);
+    }
+
+    recursion(300, 0);
+  }
+
+  public finalScenario(): void {
+    var parent = this;
+    function rightWallFollower(): void {
+      console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
+      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
+      if (parent.side_sensor_reading > parent.side_threshold) {
+        setTimeout(() => { parent.turnRight(); }, 0);
+        setTimeout(() => { parent.moveForward(150, 1000); }, 1000);
+        console.log("Inside 1st scenario");
+      } else if (parent.side_sensor_reading < parent.side_threshold &&
+        parent.front_sensor_reading > parent.front_threshold) {
+        setTimeout(() => { parent.moveForward(150, 1000); }, 1000);
+        console.log("Inside 2nd scenario");
+      } else if (parent.side_sensor_reading < parent.side_threshold &&
+        parent.front_sensor_reading < parent.front_threshold) {
+        setTimeout(() => { parent.turnLeft(); }, 1000);
+        console.log("Inside 3rd scenario");
+      }
+    }
+
+    function recursion(num, i): void {
+      rightWallFollower();
+      i += 1;
+      if (i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
+      console.log("Inside recursion | i=" + i);
+
+      setTimeout(function() { recursion(num, i); }, 1750);
+    }
+
+    recursion(200, 0);
+  }
+
+}
