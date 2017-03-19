@@ -310,23 +310,23 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     front += this.check_obstacle(1);
     side += this.check_obstacle(2);
-    console.log("**BEFORE** FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
+    // console.log("**BEFORE** FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     if (this.direction == 1) {
       front = this.yCoord - front;
       side = side - (this.xCoord + 80);
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
+      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 90 || this.angle == -270) {
       front = front - this.xCoord;
       side = side - (this.yCoord + 80);
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
+      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 180 || this.angle == -180) {
       front = front - this.yCoord;
       side = (this.xCoord - 80) - side;
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
+      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 270 || this.angle == -90) {
       front = this.xCoord - front;
       side = (this.yCoord - 80) - side;
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
+      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
 
     var front_sensor_reading = this.front_sensor_reading;
@@ -352,11 +352,10 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     this.update_frontSensor(front, side);
 
-    console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
+    // console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
   }
 
   public turnRight(): void {
-    console.log("turn function");
     this.checkPosition();
     var rotate = this.angle;
     var x = this.xCoord;
@@ -380,7 +379,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   public turnLeft(): void {
-    console.log("turn function");
     this.checkPosition();
     var rotate = this.angle;
     var x = this.xCoord;
@@ -835,7 +833,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(cmdStack, timeStack, 0);
   }
 
-  public forLoopCmd(cmdStack: string[], timeStack: number[]): void {
+  public for_loop_cmd_found(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
     console.log("CmdStack size=" + cmdStack.length);
     var initial_num;
@@ -850,7 +848,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         console.log("For loop-> initial_num:" + initial_num + " | condition:" + condition_num);
         cmdStack.splice(i, 1);
       }
-
     }
 
     for (var i = 0; i < cmdStack.length; i++) {
@@ -869,18 +866,45 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(cmdStack, timeStack, parseInt(initial_num), 0);
   }
 
+  public while_loop_cmd_found(cmdStack: string[], timeStack: number[]): void {
+    var parent = this;
+    console.log("CmdStack size=" + cmdStack.length);
+    for (var i = 0; i < cmdStack.length; i++) {
+      console.log("command[" + i + "]: " + cmdStack[i]);
+      // console.log("time[" + i + "]: " + timeStack[i]);
+      if(cmdStack[i].match(/while-loop-start/g) != null) {
+        var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
+        cmdStack.splice(i, 1);
+      }
+
+    }
+
+    function recursion(cmdStack, timeStack, i, j): void {
+      eval(cmdStack[j]);
+      i += 1;
+      j += 1;
+      if (i >= (500 * (cmdStack.length + 1)) || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
+      console.log("Inside recursion | i=" + i);
+      if ((i % (cmdStack.length + 1)) == 0) { j = 0; }
+      setTimeout(function() { recursion(cmdStack, timeStack, i, j); }, timeStack[j - 1]);
+    }
+
+    recursion(cmdStack, timeStack, 0, 0);
+  }
+
   public scenario2D(distance: number): void {
     this.moveForward(distance, distance * 30);
   }
 
-  public scenario3B(): void {
-    this.front_threshold = 100;
+  public scenario3B(front_threshold_value: number): void {
+    this.front_threshold = front_threshold_value;
     var distance = this.front_sensor_reading - this.front_threshold;
     this.moveForward(distance, distance * 30);
   }
 
-  public scenario3C(): void {
+  public scenario3C(front_threshold_value: number): void {
     var parent = this;
+    parent.front_threshold = front_threshold_value;
     function scenario3Ci(): void {
       console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
       console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
@@ -905,8 +929,9 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(200, 0);
   }
 
-  public scenario3D(): void {
+  public scenario3D(front_threshold_value: number): void {
     var parent = this;
+    parent.front_threshold = front_threshold_value;
     function scenario3Di(): void {
       console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
       console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
