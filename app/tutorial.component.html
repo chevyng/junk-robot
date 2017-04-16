@@ -1,0 +1,253 @@
+<p></p>
+
+<div class="container ">
+  <div class="card">
+    <div class="card-block" style="background-color:#f7f7f7;">
+      <h4 class="card-title text-center mb-4">Q1. Using motor's steps to move a set distance (e.g: 10cm)</h4>
+
+        <dl class="row">
+          <dt class="col-sm-4 text-right">Concept:</dt>
+          <dd class="col-sm-8 text-left">
+            <p>
+              The 28BYJ-48 stepper motor turns by making small discrete steps
+              <br>A full revolution is approximately 4096 steps (In half step mode)
+            </p>
+          </dd>
+
+          <dt class="col-sm-4 text-right">Implementation:</dt>
+          <dd class="col-sm-8 text-left">
+              <p class="text-left">1. Measure the circumference of the wheel
+              <br>2. Calculate the number of steps needed to move a distance (Distance / Wheel Circumference)
+              </p>
+          </dd>
+        </dl>
+    </div>
+  </div>
+</div>
+
+<p></p>
+
+<div class="container ">
+  <div class="card">
+    <div class="card-block" style="background-color:#f7f7f7;">
+      <h4 class="card-title text-center mb-4">Q2. Stop robot once an obstacle is detected</h4>
+
+        <dl class="row">
+          <dt class="col-sm-4 text-right">Concept:</dt>
+          <dd class="col-sm-8 text-left">
+            <p>We want our robot to move straight until it is 10cm away from an obstacle.
+              <br>Using the front sensor of the robot, we read the distance between the robot and the obstacle.
+              <br>The robot will continue moving until it is 10cm from the obstacle.
+            </p>
+          </dd>
+
+          <dt class="col-sm-4 text-right">Implementation:</dt>
+          <dd class="col-sm-8 text-left">
+              <p class="text-left">
+                1. Use a while loop
+                <br>2. Read the front sensor value
+                <br>3. Use the front sensor value as the while loop condition
+                <br>4. Implement code inside while loop
+                </p>
+          </dd>
+        </dl>
+    </div>
+  </div>
+</div>
+
+<p></p>
+
+<div class="container ">
+  <div class="card">
+    <div class="card-block" style="background-color:#f7f7f7;">
+      <h4 class="card-title text-center mb-4">Q3. Maintaining a distance from an obstacle</h4>
+
+        <dl class="row">
+          <dt class="col-sm-4 text-right">Concept:</dt>
+          <dd class="col-sm-8 text-left">
+            <p>We want our robot to maintain a distance, for example, 10cm away from an obstacle and
+              <br>maintain that distance without stopping.
+            </p>
+          </dd>
+
+          <dt class="col-sm-4 text-right">Implementation:</dt>
+          <dd class="col-sm-8 text-left">
+              <p class="text-left">
+                1. Use a while loop
+                <br>2. Read the front sensor value
+                <br>3. Use conditions (If/else) with the front sensor value to implement the inner code
+                </p>
+          </dd>
+        </dl>
+    </div>
+  </div>
+</div>
+
+<p></p>
+
+<div class="container ">
+  <div class="card">
+    <div class="card-block" style="background-color:#f7f7f7;">
+      <h4 class="card-title text-center mb-4">Q4. Turn after an obstacle is detected</h4>
+
+        <dl class="row">
+          <dt class="col-sm-4 text-right">Concept:</dt>
+          <dd class="col-sm-8 text-left">
+            <p>We want our robot to continue moving after detecting an obstacle in front.
+            <br>The robot should move straight whenever it doesn't detect an obstacle but once the
+            <br>robot detects an obstacle in front, it turns right and continues moving straight.
+            </p>
+          </dd>
+
+          <dt class="col-sm-4 text-right">Implementation:</dt>
+          <dd class="col-sm-8 text-left">
+              <p class="text-left">1. Turn right whenever possible
+                <br>2. Move forward 1 grid and turn right
+                <br>3. Turn Left
+              </p>
+          </dd>
+        </dl>
+    </div>
+  </div>
+</div>
+
+<p></p>
+
+<div class="container mb-5">
+  <div class="card">
+    <div class="card-block" style="background-color:#f7f7f7;">
+      <h4 class="card-title text-center mb-4">Q5. Right Wall Follower</h4>
+
+        <dl class="row">
+          <dt class="col-sm-4 text-right">Concept:</dt>
+          <dd class="col-sm-8 text-left">
+            <p>Building on from the previous question, think of a way to allow our robot to
+              <br>traverse any connected maze by following the right wall of the maze.
+            </p>
+          </dd>
+
+          <dt class="col-sm-4 text-right">Implementation:</dt>
+          <dd class="col-sm-8 text-left">
+              <p class="text-left">
+                1. Turn right whenever possible
+                <br>2. If not, move forward 1 grid and turn right
+                <br>3. If all else fails, turn Left
+              </p>
+          </dd>
+        </dl>
+    </div>
+  </div>
+</div>
+
+<p></p>
+
+<div class="container mb-3">
+<div class="row">
+<div class="col-sm-6">
+  <div class="card">
+    <div class="card-block" style="background-color:#eaf9ee;">
+      <h4 class="card-title text-center mb-1">Answers for Q1</h4>
+      <pre>
+        <code>
+    // 4096 steps = ~15.7cm
+    // Therefore : target distance = (4096/15.7) * 10cm
+    // target distance = 2609
+
+    let target_distance = 2609
+    let steps = 0;
+    while (steps &lt; target_distance) &#123;
+         robot.moveForward(1)
+         steps = steps + 1
+    &#125;
+        </code>
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="col-sm-6">
+  <div class="card" style="height:360px">
+    <div class="card-block" style="background-color:#eaf9ee;">
+      <h4 class="card-title text-center mb-1">Answers for Q2</h4>
+            <pre>
+              <code>
+      let front_threshold = 20
+      while (front_sensor > front_threshold) &#123;
+          robot.moveForward(1, DistUnit.Centimeters)
+      &#125;
+              </code>
+            </pre>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="container mb-3">
+<div class="row">
+  <div class="col-sm-6">
+  <div class="card">
+    <div class="card-block" style="background-color:#eaf9ee;">
+      <h4 class="card-title text-center mb-1">Answers for Q3</h4>
+      <pre>
+        <code>
+      let front_threshold = 20
+      while (true) &#123;
+          if (front_sensor < front_threshold) &#123;
+              robot.moveBackward(1, DistUnit.Centimeters)
+          &#125; else &#123;
+              robot.moveForward(1, DistUnit.Centimeters)
+          &#125;
+      &#125;
+        </code>
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="col-sm-6">
+  <div class="card">
+    <div class="card-block" style="background-color:#eaf9ee;">
+      <h4 class="card-title text-center mb-1">Answers for Q4</h4>
+      <pre>
+        <code>
+      let front_threshold = 26
+      while (true) &#123;
+          if (front_sensor < front_threshold) &#123;
+              robot.turnRight()
+          &#125; else &#123;
+              robot.moveForward(1, DistUnit.Centimeters)
+          &#125;
+      &#125;
+        </code>
+      </pre>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="container mb-3">
+  <div class="card">
+    <div class="card-block" style="background-color:#eaf9ee;">
+      <h4 class="card-title text-center mb-1">Answers for Q5</h4>
+      <pre>
+        <code>
+                  let front_threshold = 20
+                  while (true) &#123;
+                      if (side_sensor > side_threshold) &#123;
+                          robot.turnRight()
+                          robot.moveForward(40, DistUnit.Centimeters)
+                       &#125; else if (side_sensor < side_threshold && front_sensor > front_threshold)
+                       &#123;
+                          robot.moveForward(40, DistUnit.Centimeters)
+                       &#125; else if (side_sensor < side_threshold && front_sensor < front_threshold)
+                        &#123;
+                          robot.turnLeft()
+                        &#125;
+                  &#125;
+        </code>
+      </pre>
+    </div>
+  </div>
+</div>

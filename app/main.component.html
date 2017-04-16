@@ -1,61 +1,40 @@
 <div class="container">
-      <h1>Robot Simulator</h1>
-      <form (ngSubmit)="onSubmit()" #heroForm="ngForm" id="mainForm">
-        <!-- <label for="d3-graph">D3Graph</label> -->
-        <div class="row">
-          <div class="col d3-component">
-            <d3-graph></d3-graph>
-          </div>
-          <div class="col">
-            <p></p>
-            <button type="button" class="btn btn-danger" (click)="stopRobot();"> Stop Robot </button>
-            <p></p>
-            <button type="button" class="btn btn-warning" (click)="reset();"> Reset </button>
-            <p></p>
-            <p></p>
-            <button type="button" class="btn btn-primary" (click)="moveForward();"> Move forward </button>
-            <p></p>
-            <button type="button" class="btn btn-primary" (click)="moveBackward();"> Move Backward </button>
-            <p></p>
-            <button type="button" class="btn btn-primary" (click)="turnLeft();"> Turn left </button>
-            <p></p>
-            <button type="button" class="btn btn-primary" (click)="turnRight();"> Turn right </button>
-            <p></p>
-            <button type="button" class="btn btn-default" (click)="test2();"> Test 2 </button>
-            <p></p>
-            <button type="button" class="btn btn-default" (click)="test3();"> Test 3 </button>
-            <p></p>
-            <button type="button" class="btn btn-success" (click)="rightWallFollower();"> Wall Follower </button>
-            <p></p>
-            <button type="button" class="btn btn-success" (click)="forLoopTest();"> For Loop Test </button>
-          </div>
-        </div>
+  <h1>Robot Simulator</h1>
+  <form (ngSubmit)="onSubmit()" #heroForm="ngForm" id="mainForm">
+    <!-- <label for="d3-graph">D3Graph</label> -->
+    <div class="row">
+      <div class="col d3-component">
+        <d3-graph></d3-graph>
+      </div>
+    </div>
 
-        <div class="row">
-          <div class="col">
-            <button type="button" class="btn btn-danger" (click)="resetForm(); heroForm.reset()">Clear Code</button>
-            <button type="button" class="btn btn-primary" (click)="parseCodeInput(codemirror.value)">Parse</button>
-            <button type="button" class="btn btn-success" (click)="testFunc(codemirror.value);"> Run </button>
-          </div>
-        </div>
-          <div class="col code-mirror">
-            <!-- <label for="codeMirror">Editor</label> -->
-            <br>
-              <codemirror #codemirror
-               [(ngModel)]="code"
-               [config]="config"
-               id="codemirror"
-               name="codemirror"
-               >
-              </codemirror>
-              <br>
-              <!-- <pre>{{code}}</pre> -->
-          </div>
+    <div class="row ml-0 mb-3">
+      <div class="col">
+        <button type="button" class="btn btn-primary" (click)="moveForward();"> Move forward </button>
+        <button type="button" class="btn btn-primary" (click)="moveBackward();"> Move Backward </button>
+        <button type="button" class="btn btn-primary" (click)="turnLeft();"> Turn left </button>
+        <button type="button" class="btn btn-primary" (click)="turnRight();"> Turn right </button>
+      </div>
+    </div>
+
+    <div class="row ml-0 mb-3">
+      <div class="col">
+        <button type="button" class="btn btn-danger" (click)="stopRobot();"> Stop Robot </button>
+        <button type="button" class="btn btn-warning" (click)="reset();"> Reset Robot </button>
+      </div>
+    </div>
 
 
 
-      <!-- <pre>{{log}}</pre> -->
-    </form>
-  <!-- </div> -->
-
+    <div class="row ml-0 mb-2">
+      <div class="col">
+        <button type="button" class="btn btn-success" (click)="parseCodeInput(codemirror.value)">Parse and run</button>
+        <button type="button" class="btn btn-danger" (click)="resetForm(); heroForm.reset()">Clear Code</button>
+      </div>
+    </div>
+    <div class="col mb-4 code-mirror">
+      <codemirror #codemirror [(ngModel)]="code" [config]="config" id="codemirror" name="codemirror">
+      </codemirror>
+    </div>
+  </form>
 </div>

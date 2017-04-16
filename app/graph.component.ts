@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnInit, OnChanges, AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
+import swal from 'sweetalert2';
 import robotDimension  from './graph/robot-dimension';
 import mazeMap from "./graph/maze/mazes";
 import mazeEnd from "./graph/maze/mazeEnd";
@@ -7,7 +8,6 @@ import * as d3 from 'd3';
 
 @Component({
   selector: 'd3-graph',
-  // encapsulation: ViewEncapsulation.None,
   template: `
     <div></div>
     `,
@@ -55,6 +55,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   private prevCmd: string;
   private direction; // 1 = North, 2 = East, 3 = South, 4 = West
   private linesName;
+  private mazeGoalName;
   public front_sensor_reading, front_sensor, front_threshold;
   public side_sensor_reading, side_sensor, side_threshold;
   private crash
@@ -196,7 +197,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("transform", "translate(90,30)");
 
     this.robot.attr("transform", "translate(" + (0 + this.xGap) + "," + ((this.scale * 3) + this.yGap) + ")")
-    console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
 
     function formatLength(d) {
       let ticks = x.ticks();
@@ -233,9 +233,10 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  public drawMaze(maze, mazeGoal): void {
+  public drawMaze(maze, mazeGoal,mazeGoalName): void {
     var endmazes = this.svg.append("g")
       .attr("class", "end-maze")
+      .attr("z-index", 1)
       .append("path")
       .attr("d", mazeGoal)
       .style("fill", "#AFFFBA");
@@ -255,6 +256,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("stroke-width", 9)
       .attr("stroke", "black");
 
+    this.mazeGoalName = mazeGoalName;
     this.map_maze(maze);
   }
 
@@ -310,23 +312,18 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     front += this.check_obstacle(1);
     side += this.check_obstacle(2);
-    // console.log("**BEFORE** FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     if (this.direction == 1) {
       front = this.yCoord - front;
       side = side - (this.xCoord + 80);
-      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 90 || this.angle == -270) {
       front = front - this.xCoord;
       side = side - (this.yCoord + 80);
-      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 180 || this.angle == -180) {
       front = front - this.yCoord;
       side = (this.xCoord - 80) - side;
-      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 270 || this.angle == -90) {
       front = this.xCoord - front;
       side = (this.yCoord - 80) - side;
-      // console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
 
     var front_sensor_reading = this.front_sensor_reading;
@@ -351,8 +348,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       });
 
     this.update_frontSensor(front, side);
-
-    // console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
   }
 
   public turnRight(): void {
@@ -401,7 +396,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   public reset(): void {
-    console.log("reset function");
     this.angle = 0;
     this.direction = 1;
     this.xCoord = 0 + this.xGap;
@@ -413,7 +407,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   public stopRobot(): void {
-    console.log("stop function");
     this.crash = 1;
   }
 
@@ -451,13 +444,15 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
           i = d3.interpolateNumber(side_sensor_reading, side);
         return function(t) { that.text(format(i(t))); };
       });
+
+    var row = this.check_maze_row(this.yCoord);
+    var col = this.check_maze_col(this.xCoord);
+    this.check_maze_complete(row,col);
   }
 
   public moveBackward(value: number, duration: number): void {
-    console.log("Before checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
-    this.check_frontSensor();
-    console.log("After checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
 
+    this.check_frontSensor();
     if (this.angle == 0) {
       this.yCoord += value;
       if (this.yCoord > (this.scale * 4 - robotDimension.base.height)) {
@@ -494,25 +489,20 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
     var front = this.check_obstacle(1);
     var side = this.check_obstacle(2);
-    //TODO: Pull function out
+
     if (this.direction == 1) {
       front = this.yCoord - front;
       side = side - (this.xCoord + 80);
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 90 || this.angle == -270) {
       front = front - this.xCoord;
       side = side - (this.yCoord + 80);
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 180 || this.angle == -180) {
       front = front - this.yCoord;
       side = (this.xCoord - 80) - side;
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 270 || this.angle == -90) {
       front = this.xCoord - front;
       side = (this.yCoord - 80) - side;
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
-    console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     this.move(duration, front, side);
     this.prevCmd = "moveBackward";
   }
@@ -520,30 +510,23 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   public moveForward(value: number, duration: number): void {
     var crash = 0;
 
-    console.log("Before checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
     if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
       if (value >= this.front_sensor_reading) {
-        console.log("Robot gonna crash! front sensor=" + this.front_sensor_reading);
-        console.log("Setting max distance to front sensor value!");
         value = this.front_sensor_reading;
         crash = 1;
       }
     }
 
     if (this.front_sensor_reading != 0) { this.check_frontSensor(); }
-    console.log("After checking sensor (before moving) : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
 
     if (this.prevCmd != "turnRight" || this.prevCmd != "turnLeft") {
-      if (value >= this.front_sensor_reading || this.front_sensor_reading == this.scale) {
-        console.log("Robot gonna crash! front sensor=" + this.front_sensor_reading);
-        if (this.front_sensor_reading == value || this.front_sensor_reading == this.scale) {
+      if (value >= this.front_sensor_reading ) {
+        if (this.front_sensor_reading == value ) {
           value = 0;
           crash = 1;
-          console.log("Already at wall!! setting front value to 0");
         } else {
           value = this.front_sensor_reading;
           crash = 1;
-          console.log("Setting max distance to front sensor value to" + value);
         }
       }
 
@@ -577,19 +560,15 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     if (this.direction == 1) {
       front = this.yCoord - front;
       side = side - (this.xCoord + 80);
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 90 || this.angle == -270) {
       front = front - this.xCoord;
       side = side - (this.yCoord + 80);
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 180 || this.angle == -180) {
       front = front - this.yCoord;
       side = (this.xCoord - 80) - side;
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     } else if (this.angle == 270 || this.angle == -90) {
       front = this.xCoord - front;
       side = (this.yCoord - 80) - side;
-      console.log("FRONT SENSOR : " + front + " | SIDE SENSOR = " + side);
     }
 
     if (crash) {
@@ -597,13 +576,19 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       this.crash = crash;
     }
 
-    console.log("current (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
-    console.log("robot center (x,y) : (" + this.xCoord + "," + this.yCoord + ")");
     this.move(duration, front, side);
     this.update_frontSensor(front, side);
-    console.log("After moving and updating : front=" + this.front_sensor_reading + " | side=" + this.side_sensor_reading);
     if (crash) {
-      setTimeout(function() { alert("Robot has crash! Reset the robot!"); }, duration);
+      swal({
+        title: 'Oh no :(',
+        text: 'You have crashed the robot..Resetting robot in 3 seconds',
+        type: 'error',
+        timer: 3000,
+        confirmButtonText:
+          'Reset robot'
+      });
+       var parent = this;
+       setTimeout(function() { parent.reset(); } , 3000);
     }
 
     this.prevCmd = "moveForward";
@@ -632,6 +617,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   public check_frontSensor(): void {
     if (this.direction == 1) {
       this.front_sensor_reading = this.yCoord - this.check_obstacle(1);
+      // console.log("front sensor obstacle distance = " + this.check_obstacle(1));
       this.side_sensor_reading = this.check_obstacle(2) - (this.xCoord + robotDimension.base.width);
     } else if (this.direction == 2) {
       this.front_sensor_reading = this.check_obstacle(1) - this.xCoord;
@@ -641,6 +627,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       this.side_sensor_reading = (this.xCoord - robotDimension.base.width) - this.check_obstacle(2);
     } else if (this.direction == 4) {
       this.front_sensor_reading = this.xCoord - this.check_obstacle(1);
+      // console.log("front sensor obstacle distance = " + this.check_obstacle(1));
       this.side_sensor_reading = (this.yCoord - robotDimension.base.width) - this.check_obstacle(2);
     }
   }
@@ -650,10 +637,21 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.side_sensor_reading = side;
   }
 
-  private check_obstacle(sensor: number): number { // Front sensor = 1, Side Sensor = 2
-    var x = this.xCoord;
-    var y = this.yCoord;
-    var row;
+  private check_maze_complete(row: number, col: number): boolean {
+    if(this.mazeGoalName != undefined){
+      if(this.mazeGoalName.includes("R" + row + "C" + col)){
+        setTimeout(function() {
+          swal({
+            title: 'Good Job!',
+            text: 'You have completed the maze!',
+            type: 'success',
+            timer: 2500
+          }); }, 1500);
+      }
+    }
+  }
+
+  private check_maze_col(x): void {
     var col;
     if (x >= 0 && x <= (this.scale)) { col = 1; }
     else if (x > (this.scale) && x <= (this.scale * 2)) { col = 2; }
@@ -662,10 +660,23 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     else if (x > (this.scale * 4) && x <= (this.scale * 5)) { col = 5; }
     else if (x > (this.scale * 5) && x <= (this.scale * 6)) { col = 6; }
 
+    return col;
+  }
+
+  private check_maze_row(y): void {
+    var row;
     if (y >= 0 && y <= (this.scale)) { row = 1; }
     else if (y >= (this.scale) && y < (this.scale * 2)) { row = 2; }
     else if (y >= (this.scale * 2) && y < (this.scale * 3)) { row = 3; }
     else if (y >= (this.scale * 3) && y < (this.scale * 4)) { row = 4; }
+
+    return row;
+  }
+  private check_obstacle(sensor: number): number { // Front sensor = 1, Side Sensor = 2
+    var x = this.xCoord;
+    var y = this.yCoord;
+    var row = this.check_maze_row(y);
+    var col = this.check_maze_col(x);
 
     // console.log("converted (x,y) to [row,col] : [" + row + "," + col + "]" );
 
@@ -701,8 +712,8 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         else { return (this.scale * 4); }
       }
       if (row == 2) {
-        if (this.linesName.indexOf(current_line) > -1) { return (this.scale * 2); }
-        else { return (this.scale * 3); }
+        if (this.linesName.indexOf(current_line) > -1) { return (this.scale * 3); }
+        else { return (this.scale * 4); }
           else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale * 4); }
       }
       if (row == 1) {
@@ -795,27 +806,23 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   public receiveCmd(cmdStack: string[], timeStack: number[]): void {
-    console.log("CmdStack size=" + cmdStack.length);
+    // console.log("CmdStack size=" + cmdStack.length);
     for (var i = 0; i < cmdStack.length; i++) {
-      console.log("command[" + i + "]: " + cmdStack[i]);
+      // console.log("command[" + i + "]: " + cmdStack[i]);
       if (cmdStack[i].match(/side_threshold/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
         this.side_threshold = value;
         cmdStack.splice(i, 1);
-        console.log("side_threshold updated to :" + this.side_threshold);
+        // console.log("side_threshold updated to :" + this.side_threshold);
       }
 
       if (cmdStack[i].match(/front_threshold/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
         this.front_threshold = value;
         cmdStack.splice(i, 1);
-        console.log("front_threshold updated to :" + this.front_threshold);
+        // console.log("front_threshold updated to :" + this.front_threshold);
       }
 
-    }
-
-    for (var i = 0; i < cmdStack.length; i++) {
-      // console.log("new command[" + i + "]: " + cmdStack[i] + " | time:" + timeStack[i]);
     }
   }
 
@@ -824,8 +831,8 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     function recursion(cmdStack, timeStack, i): void {
       eval(cmdStack[i]);
       i += 1;
-      if (i >= cmdStack.length || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
-      console.log("Inside recursion | i=" + i);
+      if (i >= cmdStack.length || parent.crash == 1) { return; };
+      // console.log("Inside recursion | i=" + i);
 
       setTimeout(function() { recursion(cmdStack, timeStack, i); }, timeStack[i - 1]);
     }
@@ -906,22 +913,17 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     var parent = this;
     parent.front_threshold = front_threshold_value;
     function scenario3Ci(): void {
-      console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
-      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
       if (parent.front_sensor_reading > parent.front_threshold) {
         setTimeout(() => { parent.moveForward(5, 33); }, 33);
-        console.log("Inside 1st scenario");
       } else {
         setTimeout(() => { parent.moveBackward(5, 33); }, 33);
-        console.log("Inside 2nd scenario");
       }
     }
 
     function recursion(num, i): void {
       scenario3Ci();
       i += 1;
-      if (i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; }
-      console.log("Inside recursion | i=" + i);
+      if (i >= num || parent.crash == 1) { return; }
 
       setTimeout(function() { recursion(num, i); }, 200);
     }
@@ -933,22 +935,17 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     var parent = this;
     parent.front_threshold = front_threshold_value;
     function scenario3Di(): void {
-      console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
-      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
       if (parent.front_sensor_reading < parent.front_threshold) {
         setTimeout(() => { parent.turnRight(); }, 1000);
-        console.log("Inside 1st scenario");
       } else {
         setTimeout(() => { parent.moveForward(150, 1000); }, 1000);
-        console.log("Inside 2nd scenario");
       }
     }
 
     function recursion(num, i): void {
       scenario3Di();
       i += 1;
-      if (i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; }
-      console.log("Inside recursion | i=" + i);
+      if (i >= num || parent.crash == 1) { return; }
 
       setTimeout(function() { recursion(num, i); }, 1000);
     }
@@ -959,28 +956,23 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   public finalScenario(): void {
     var parent = this;
     function rightWallFollower(): void {
-      console.log("front-sensor threshold:" + parent.front_threshold + " , side-sensor threshold:" + parent.side_threshold);
-      console.log("front-sensor reading:" + parent.front_sensor_reading + " , side-sensor reading:" + parent.side_sensor_reading);
       if (parent.side_sensor_reading > parent.side_threshold) {
         setTimeout(() => { parent.turnRight(); }, 0);
         setTimeout(() => { parent.moveForward(150, 1000); }, 1000);
-        console.log("Inside 1st scenario");
+
       } else if (parent.side_sensor_reading < parent.side_threshold &&
         parent.front_sensor_reading > parent.front_threshold) {
         setTimeout(() => { parent.moveForward(150, 1000); }, 1000);
-        console.log("Inside 2nd scenario");
       } else if (parent.side_sensor_reading < parent.side_threshold &&
         parent.front_sensor_reading < parent.front_threshold) {
         setTimeout(() => { parent.turnLeft(); }, 1000);
-        console.log("Inside 3rd scenario");
       }
     }
 
     function recursion(num, i): void {
       rightWallFollower();
       i += 1;
-      if (i >= num || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
-      console.log("Inside recursion | i=" + i);
+      if (i >= num || parent.crash == 1) { return; };
 
       setTimeout(function() { recursion(num, i); }, 1750);
     }

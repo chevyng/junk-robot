@@ -36,7 +36,7 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       if (this.loadCount != 0) {
         this.router.navigateByUrl('').then(
           () => {
-            this.router.navigateByUrl('maze/'+this.id);
+            this.router.navigateByUrl('maze/' + this.id);
           }
         );
       }
@@ -49,7 +49,8 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       name: 'javascript',
       json: true
     },
-    theme: 'abcdef'
+    theme: 'abcdef',
+    indentUnit: 4
   };
   code = dummyCodes.sampleCode;
   submitted = false;
@@ -62,7 +63,6 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     this.sub = this.route.params.subscribe(params => {
       this.id = +params['id']; // (+) converts string 'id' to a number
       console.log("ID = " + this.id);
-      // In a real app: dispatch action to load the details here.
     });
   }
 
@@ -73,70 +73,46 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
   }
 
   reloadMaze(id) {
-    if (this.id == 1) { var maze = mazeMap.mazes.maze1; var mazeGoal = mazeEnd.maze1.goal; }
-    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; var mazeGoal = mazeEnd.maze2.goal;}
-    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; var mazeGoal = mazeEnd.maze3.goal;}
-    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; var mazeGoal = mazeEnd.maze4.goal;}
-    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; var mazeGoal = mazeEnd.maze5.goal;}
-    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; var mazeGoal = mazeEnd.maze6.goal;}
-    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; var mazeGoal = mazeEnd.maze7.goal;}
+    if (this.id == 1) { var maze = mazeMap.mazes.maze1; var mazeGoal = mazeEnd.maze1.goal; var mazeGoalName = mazeEnd.maze1.name; }
+    else if (this.id == 2) { var maze = mazeMap.mazes.maze2; var mazeGoal = mazeEnd.maze2.goal; var mazeGoalName = mazeEnd.maze2.name; }
+    else if (this.id == 3) { var maze = mazeMap.mazes.maze3; var mazeGoal = mazeEnd.maze3.goal; var mazeGoalName = mazeEnd.maze3.name; }
+    else if (this.id == 4) { var maze = mazeMap.mazes.maze4; var mazeGoal = mazeEnd.maze4.goal; var mazeGoalName = mazeEnd.maze4.name; }
+    else if (this.id == 5) { var maze = mazeMap.mazes.maze5; var mazeGoal = mazeEnd.maze5.goal; var mazeGoalName = mazeEnd.maze5.name; }
+    else if (this.id == 6) { var maze = mazeMap.mazes.maze6; var mazeGoal = mazeEnd.maze6.goal; var mazeGoalName = mazeEnd.maze6.name; }
+    else if (this.id == 7) { var maze = mazeMap.mazes.maze7; var mazeGoal = mazeEnd.maze7.goal; var mazeGoalName = mazeEnd.maze7.name; }
     else { var maze = mazeMap.mazes.emptyMaze; }
-    eval("this.graph.drawMaze(maze,mazeGoal);");
+    eval("this.graph.drawMaze(maze,mazeGoal,mazeGoalName);");
   }
 
   log = '';
 
   public parseCodeInput(value: string): void {
-    var code;
-    // if (value.match(/for\((.*?)\){([\s\S]*?)}/g) != null) {
-    //   // Matches For Loop
-    //   code = value.match(/for\((.*?)\){([\s\S]*?)}/g);
-    //   console.log(code);
-    //   console.log(code.length);
-    //   code = code.toString();
-    // }
-    // console.log(value);
-    if(this.scenarioParser(value) == 1){
-        var arrayofLines = value.split("\n");
-        this.stack = []; // Clear array
-        this.timeStack = [];
-        this.totalTime = 0; // Clear timing
-        this.forLoop = 0;
-        this.whileLoop = 0;
-        console.log("Num of line break = " + arrayofLines.length);
-        for (var i = 0; i < arrayofLines.length; i++) {
-          this.log += `Line${i}: `;
-          this.log += `${arrayofLines[i]}\n`;
-          this.determineCmd1(arrayofLines[i], this.stack, this.timeStack);
-        }
-        console.log("Num of command: " + this.stack.length);
+    //ScenarioParser returns 1 if it doesn't match any of the scenario
+    if (this.scenarioParser(value) == 1) {
+      var arrayofLines = value.split("\n");
+      this.stack = []; // Clear array
+      this.timeStack = [];
+      this.totalTime = 0; // Clear timing
+      this.forLoop = 0;
+      this.whileLoop = 0;
+      console.log("Num of line break = " + arrayofLines.length);
+      for (var i = 0; i < arrayofLines.length; i++) {
+        this.log += `Line${i}: `;
+        this.log += `${arrayofLines[i]}\n`;
+        this.determineCmd(arrayofLines[i], this.stack, this.timeStack);
+      }
+      console.log("Num of command: " + this.stack.length);
 
-        if(this.forLoop == 1 ) {
-          this.graph.for_loop_cmd_found(this.stack, this.timeStack);
-        }
+      if (this.forLoop == 1) {
+        this.graph.for_loop_cmd_found(this.stack, this.timeStack);
+      }
 
-        if(this.whileLoop == 1 ) {
-          this.graph.while_loop_cmd_found(this.stack, this.timeStack);
-        }
-
-        // for(var i=0; i<this.stack.length; i++){
-        //     console.log("command["+ i + "]: " + this.stack[i]);
-        // }
+      if (this.whileLoop == 1) {
+        this.graph.while_loop_cmd_found(this.stack, this.timeStack);
+      }
     }
   }
 
-  test2(): void {
-    // eval("this.graph.receiveCmd1(this.stack, this.timeStack);");
-    eval("this.graph.scenario3D();");
-  }
-
-  test3(): void {
-    eval("this.graph.turnRight(); this.graph.moveForward(75,500);")
-  }
-
-  forLoopTest(): void {
-    eval("this.graph.forLoopCmd(this.stack, this.timeStack);");
-  }
 
   reset(): void {
     console.log("reset function from hero-form");
@@ -163,55 +139,8 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     eval("this.graph.moveBackward(75, 500);")
   }
 
-  rightWallFollower(): void {
-    eval("this.graph.finalScenario();")
-  }
 
-  private determineCmd(line: string, cmdStack: string[]): void {
-    var value;
-    var cmdStringStart = "setTimeout(() => { this.";
-    var cmdStringEnd = "; }, ";
-    var turnTiming = 1000;
-
-    if (line.match(/turnLeft/g) != null) {
-      value = line.substr((line.indexOf("(") + 1));
-      value = value.slice(0, value.indexOf(")"));
-      // setTimeout(() => { this.graph.turnLeft(); }, 1000);
-      cmdStack.push(cmdStringStart + "turnLeft()" + cmdStringEnd + this.totalTime + ");");
-      this.totalTime += turnTiming;
-    }
-    else if (line.match(/turnRight/g) != null) {
-      value = line.substr((line.indexOf("(") + 1));
-      value = value.slice(0, value.indexOf(")"));
-      cmdStack.push(cmdStringStart + "turnRight()" + cmdStringEnd + this.totalTime + ");");
-      this.totalTime += turnTiming;
-    }
-    else if (line.match(/moveForward/g) != null) {
-      value = line.substr((line.indexOf("(") + 1));
-      value = value.slice(0, value.indexOf(","));
-      var unit = value.slice(value.indexOf("."), value.indexOf(")"));
-      cmdStack.push(cmdStringStart + "moveForward(" + value + "," + (value * 10) + ")"
-        + cmdStringEnd + (this.totalTime) + ");");
-      this.totalTime += (value * 10);
-    }
-    else if (line.match(/moveBackward/g) != null) {
-      value = line.substr((line.indexOf("(") + 1));
-      value = value.slice(0, value.indexOf(")"));
-      cmdStack.push(cmdStringStart + "moveBackward(" + value + "," + (value * 10) + ")"
-        + cmdStringEnd + (this.totalTime) + ");");
-      this.totalTime += (value * 10);
-    }
-    else if (line.match(/sideThreshold =/g) != null) {
-      value = line.substr((line.indexOf("=") + 1));
-      cmdStack.push("sideThreshold=" + value);
-    }
-    else if (line.match(/frontThreshold =/g) != null) {
-      value = line.substr((line.indexOf("=") + 1));
-      cmdStack.push("frontThreshold=" + value);
-    }
-  }
-
-  private determineCmd1(line: string, cmdStack: string[], timeStack: number[]): void {
+  private determineCmd(line: string, cmdStack: string[], timeStack: number[]): void {
     var value;
     var cmdStringStart = "parent.";
     var cmdStringEnd = "-";
@@ -245,14 +174,6 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       timeStack.push(value * 10);
       this.totalTime += (value * 10);
     }
-    // else if (line.match(/sideThreshold =/g) != null) {
-    //   value = line.substr((line.indexOf("=") + 1));
-    //   cmdStack.push("sideThreshold=" + value);
-    // }
-    // else if (line.match(/frontThreshold =/g) != null) {
-    //   value = line.substr((line.indexOf("=") + 1));
-    //   cmdStack.push("frontThreshold=" + value);
-    // }
     else if (line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
       // Matches For Loop
       var value = line.substr((line.indexOf("=") + 1));
@@ -272,70 +193,59 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     }
   }
 
-  private evaluate_for_loop(cmdStack: string[]): string[] {
-    if (line.match(/for\((.*?)\)/g) || line.match(/for \((.*?)\)/g) != null) {
-      // Matches For Loop
-      var value = line.substr((line.indexOf("=") + 1));
-      var initial_num = value.slice(0, value.indexOf(";"));
-      value = value.slice(value.indexOf("<") + 1);
-      var condition_num = value.slice(0, value.indexOf(";"));
-      console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
-      cmdStack.push("for-loop-start");
-    }
-
-
   public scenarioParser(code: string): number {
-    if(code.includes("while (steps < target_distance) {" ) ||
-      code.includes("while (steps < " )){
+    code = code.replace(/\s/g, '');
+    console.log(code);
+    if (code.includes("while(steps<target_distance")) {
       console.log("Inside scenario 2D!");
-      var value = code.substr((code.indexOf("<") + 1));
-      value = value.slice(0, value.indexOf(")"));
+      var value = code.slice((code.indexOf("target_distance=") + 16), code.indexOf("target_distance=") + 20);
+      value = value.replace(/\D/g, '');
       console.log("Value = " + value);
-      this.graph.scenario2D(value/27);
+      this.graph.scenario2D(value / 27);
       return 0;
     }
-    else if(code.includes(`while (front_sensor > front_threshold) {\n    robot.moveForward(`) ||
-            code.includes(`while (frontSensor > frontThreshold) {\n    robot.moveForward(`)){
+    else if (code.includes(`while(front_sensor>front_threshold){robot.moveForward(`) ||
+      code.includes(`while(frontSensor>frontThreshold){robot.moveForward(`)) {
       console.log("Inside scenario 3B");
-      if(code.match(/frontThreshold/g)) {
-          var value = code.slice((code.indexOf("frontThreshold =") + 16), code.indexOf("frontThreshold =") + 20));
-      } else if(code.match(/front_threshold/g)) {
-          var value = code.slice((code.indexOf("front_threshold =") + 17), code.indexOf("front_threshold =") + 21));
+      if (code.match(/frontThreshold/g)) {
+        var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
+      } else if (code.match(/front_threshold/g)) {
+        var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
       }
       console.log("Scenario 3B Value = " + value);
 
       this.graph.scenario3B(value);
       return 0;
     }
-    else if(code.includes(`while (true) {\n    if (front_sensor < front_threshold) {\n        robot.moveBackward(`) ||
-            code.includes(`while (true) {\n    if (frontSensor < frontThreshold) {\n        robot.moveBackward(`) ||
-            code.includes(`while (true) {\n    if (front_sensor > front_threshold) {\n        robot.moveForward(`) ||
-            code.includes(`while (true) {\n    if (frontSensor > frontThreshold) {\n        robot.moveForward(`) ){
+    else if (code.includes(`while(true){if(front_sensor<front_threshold){robot.moveBackward(`) ||
+      code.includes(`while(true){if(frontSensor<frontThreshold){robot.moveBackward(`) ||
+      code.includes(`while(true){if(front_sensor>front_threshold){robot.moveForward(`) ||
+      code.includes(`while(true){if(frontSensor>frontThreshold){robot.moveForward(`)) {
       console.log("Inside scenario 3C!");
-      if(code.match(/frontThreshold/g)) {
-          var value = code.slice((code.indexOf("frontThreshold =") + 16), code.indexOf("frontThreshold =") + 20));
-      } else if(code.match(/front_threshold/g)) {
-          var value = code.slice((code.indexOf("front_threshold =") + 17), code.indexOf("front_threshold =") + 21));
+      if (code.match(/frontThreshold/g)) {
+        var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
+      } else if (code.match(/front_threshold/g)) {
+        var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
       }
       console.log("Scenario 3C Value = " + value);
 
       this.graph.scenario3C(value);
       return 0;
     }
-    else if(code.includes(`while (true) {\n    if (front_sensor < front_threshold) {\n        robot.turnRight()`) ||
-            code.includes(`while (true) {\n    if (frontSensor < frontThreshold) {\n        robot.turnRight()`) ){
+    else if (code.includes(`while(true){if(front_sensor<front_threshold){robot.turnRight()`) ||
+      code.includes(`while(true){if(frontSensor<frontThreshold){robot.turnRight()`)) {
       console.log("Inside scenario 3D!");
-      if(code.match(/frontThreshold/g)) {
-          var value = code.slice((code.indexOf("frontThreshold =") + 16), code.indexOf("frontThreshold =") + 20));
-      } else if(code.match(/front_threshold/g)) {
-          var value = code.slice((code.indexOf("front_threshold =") + 17), code.indexOf("front_threshold =") + 21));
+      if (code.match(/frontThreshold/g)) {
+        var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
+      } else if (code.match(/front_threshold/g)) {
+        var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
       }
       console.log("Scenario 3D Value = " + value);
       this.graph.scenario3D(value);
       return 0;
     }
-    else if(code.includes(`while (true) {\n    if (side_sensor > side_threshold) {\n        robot.turnRight()\n        robot.moveForward`) ||
-            code.includes(`while (true) {\n    if (sideSensor > sideThreshold) {\n        robot.turnRight()\n        robot.moveForward`) ){
+    else if (code.includes(`while(true){if(side_sensor>side_threshold){robot.turnRight()robot.moveForward`) ||
+      code.includes(`while(true){if(sideSensor>sideThreshold){robot.turnRight()robot.moveForward`)) {
       console.log("Inside right wall follower!");
       this.graph.finalScenario();
       return 0;
@@ -346,4 +256,4 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
 
 
 
-  }
+}

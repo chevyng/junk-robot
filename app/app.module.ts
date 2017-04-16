@@ -8,14 +8,15 @@ import { AppComponent }                     from './app.component';
 import { MainComponent }                    from './main.component';
 import { GraphComponent }                   from './graph.component'
 import { HeaderComponent }                  from './header.component';
-import { AboutComponent }                   from './about.component';
+import { TutorialComponent }                from './tutorial.component';
+import { FooterComponent }                  from './footer.component';
 
 import { CodemirrorModule }                 from 'ng2-codemirror';
 import { NgbModule }                        from '@ng-bootstrap/ng-bootstrap';
 
 const appRoutes: Routes = [
   { path: '', component: MainComponent, pathMatch: 'full'},
-  { path: 'about', component: AboutComponent },
+  { path: 'tutorials', component: TutorialComponent },
   { path: 'maze/:id', component: MainComponent },
 ];
 
@@ -32,7 +33,8 @@ const appRoutes: Routes = [
     MainComponent,
     GraphComponent,
     HeaderComponent,
-    AboutComponent
+    TutorialComponent,
+    FooterComponent
   ],
   bootstrap: [ AppComponent ]
 })

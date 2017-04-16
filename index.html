@@ -11,6 +11,7 @@
     <!-- load bootstrap 3 styles -->
     <!-- <link rel="stylesheet" href="https://unpkg.com/bootstrap@3.3.7/dist/css/bootstrap.min.css"> -->
     <link rel="stylesheet" href="http://v4-alpha.getbootstrap.com/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap.min.css">
     <!-- Polyfill(s) for older browsers -->
     <!-- Import and load codemirror -->
     <link rel="stylesheet" href="https://npmcdn.com/codemirror@5.16.0/lib/codemirror.css" />
@@ -24,10 +25,12 @@
     <!-- load d3 library  -->
     <script src="https://d3js.org/d3.v4.js"></script>
 
+    <script src="node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="node_modules/sweetalert2/dist/sweetalert2.min.css">
+
     <script src="node_modules/core-js/client/shim.min.js"></script>
     <script src="node_modules/zone.js/dist/zone.js"></script>
     <script src="node_modules/systemjs/dist/system.src.js"></script>
-
     <script src="systemjs.config.js"></script>
     <script>
       System.import('app').catch(function(err){ console.error(err); });
