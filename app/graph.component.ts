@@ -1,4 +1,5 @@
-import { Component, ElementRef, OnInit, OnChanges, AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, OnInit, OnChanges,
+         AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
 import swal from 'sweetalert2';
 import robotDimension  from './graph/robot-dimension';
@@ -233,7 +234,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  public drawMaze(maze, mazeGoal,mazeGoalName): void {
+  public drawMaze(maze, mazeGoal, mazeGoalName): void {
     var endmazes = this.svg.append("g")
       .attr("class", "end-maze")
       .attr("z-index", 1)
@@ -447,7 +448,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     var row = this.check_maze_row(this.yCoord);
     var col = this.check_maze_col(this.xCoord);
-    this.check_maze_complete(row,col);
+    this.check_maze_complete(row, col);
   }
 
   public moveBackward(value: number, duration: number): void {
@@ -520,8 +521,8 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     if (this.front_sensor_reading != 0) { this.check_frontSensor(); }
 
     if (this.prevCmd != "turnRight" || this.prevCmd != "turnLeft") {
-      if (value >= this.front_sensor_reading ) {
-        if (this.front_sensor_reading == value ) {
+      if (value >= this.front_sensor_reading) {
+        if (this.front_sensor_reading == value) {
           value = 0;
           crash = 1;
         } else {
@@ -585,10 +586,10 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         type: 'error',
         timer: 3000,
         confirmButtonText:
-          'Reset robot'
+        'Reset robot'
       });
-       var parent = this;
-       setTimeout(function() { parent.reset(); } , 3000);
+      var parent = this;
+      setTimeout(function() { parent.reset(); }, 3000);
     }
 
     this.prevCmd = "moveForward";
@@ -617,8 +618,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   public check_frontSensor(): void {
     if (this.direction == 1) {
       this.front_sensor_reading = this.yCoord - this.check_obstacle(1);
-      // console.log("front sensor obstacle distance = " + this.check_obstacle(1));
-      this.side_sensor_reading = this.check_obstacle(2) - (this.xCoord + robotDimension.base.width);
     } else if (this.direction == 2) {
       this.front_sensor_reading = this.check_obstacle(1) - this.xCoord;
       this.side_sensor_reading = this.check_obstacle(2) - (this.yCoord + robotDimension.base.width);
@@ -627,7 +626,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       this.side_sensor_reading = (this.xCoord - robotDimension.base.width) - this.check_obstacle(2);
     } else if (this.direction == 4) {
       this.front_sensor_reading = this.xCoord - this.check_obstacle(1);
-      // console.log("front sensor obstacle distance = " + this.check_obstacle(1));
       this.side_sensor_reading = (this.yCoord - robotDimension.base.width) - this.check_obstacle(2);
     }
   }
@@ -638,15 +636,16 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   private check_maze_complete(row: number, col: number): boolean {
-    if(this.mazeGoalName != undefined){
-      if(this.mazeGoalName.includes("R" + row + "C" + col)){
+    if (this.mazeGoalName != undefined) {
+      if (this.mazeGoalName.includes("R" + row + "C" + col)) {
         setTimeout(function() {
           swal({
             title: 'Good Job!',
             text: 'You have completed the maze!',
             type: 'success',
             timer: 2500
-          }); }, 1500);
+          });
+        }, 1500);
       }
     }
   }
@@ -677,8 +676,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     var y = this.yCoord;
     var row = this.check_maze_row(y);
     var col = this.check_maze_col(x);
-
-    // console.log("converted (x,y) to [row,col] : [" + row + "," + col + "]" );
 
     if ((this.direction == 1 && sensor == 1) || (this.direction == 4 && sensor == 2)) {
       var current_line = "R" + (row - 1) + "C" + col;
@@ -806,33 +803,11 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   public receiveCmd(cmdStack: string[], timeStack: number[]): void {
-    // console.log("CmdStack size=" + cmdStack.length);
-    for (var i = 0; i < cmdStack.length; i++) {
-      // console.log("command[" + i + "]: " + cmdStack[i]);
-      if (cmdStack[i].match(/side_threshold/g) != null) {
-        var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
-        this.side_threshold = value;
-        cmdStack.splice(i, 1);
-        // console.log("side_threshold updated to :" + this.side_threshold);
-      }
-
-      if (cmdStack[i].match(/front_threshold/g) != null) {
-        var value = cmdStack[i].substr((cmdStack[i].indexOf("=") + 1));
-        this.front_threshold = value;
-        cmdStack.splice(i, 1);
-        // console.log("front_threshold updated to :" + this.front_threshold);
-      }
-
-    }
-  }
-
-  public receiveCmd1(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
     function recursion(cmdStack, timeStack, i): void {
       eval(cmdStack[i]);
       i += 1;
       if (i >= cmdStack.length || parent.crash == 1) { return; };
-      // console.log("Inside recursion | i=" + i);
 
       setTimeout(function() { recursion(cmdStack, timeStack, i); }, timeStack[i - 1]);
     }
@@ -847,7 +822,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     var condition_num;
     for (var i = 0; i < cmdStack.length; i++) {
       console.log("command[" + i + "]: " + cmdStack[i]);
-      // console.log("time[" + i + "]: " + timeStack[i]);
       if (cmdStack[i].match(/for-loop-start/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
         initial_num = value.slice(0, value.indexOf(","));
@@ -864,8 +838,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       eval(cmdStack[j]);
       i += 1;
       j += 1;
-      if (i >= (parseInt(condition_num) * (cmdStack.length + 1)) || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
-      console.log("Inside recursion | i=" + i);
+      if (i >= (parseInt(condition_num) * (cmdStack.length + 1)) || parent.crash == 1) { return; };
       if ((i % (cmdStack.length + 1)) == 0) { j = 0; }
       setTimeout(function() { recursion(cmdStack, timeStack, i, j); }, timeStack[j - 1]);
     }
@@ -875,11 +848,8 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
   public while_loop_cmd_found(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
-    console.log("CmdStack size=" + cmdStack.length);
     for (var i = 0; i < cmdStack.length; i++) {
-      console.log("command[" + i + "]: " + cmdStack[i]);
-      // console.log("time[" + i + "]: " + timeStack[i]);
-      if(cmdStack[i].match(/while-loop-start/g) != null) {
+      if (cmdStack[i].match(/while-loop-start/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
         cmdStack.splice(i, 1);
       }
@@ -890,8 +860,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       eval(cmdStack[j]);
       i += 1;
       j += 1;
-      if (i >= (500 * (cmdStack.length + 1)) || parent.crash == 1) { console.log("Finish executing/Robot crashed!"); return; };
-      console.log("Inside recursion | i=" + i);
+      if (i >= (1000 * (cmdStack.length + 1)) || parent.crash == 1) { return;  };
       if ((i % (cmdStack.length + 1)) == 0) { j = 0; }
       setTimeout(function() { recursion(cmdStack, timeStack, i, j); }, timeStack[j - 1]);
     }

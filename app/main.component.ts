@@ -1,4 +1,5 @@
-import { Component, OnInit, ElementRef, OnChanges, AfterViewInit, ViewChild, AfterContent } from '@angular/core';
+import { Component, OnInit, ElementRef, OnChanges,
+         AfterViewInit, ViewChild, AfterContent } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { GraphComponent } from './graph.component';
@@ -62,7 +63,6 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
   ngOnInit() {
     this.sub = this.route.params.subscribe(params => {
       this.id = +params['id']; // (+) converts string 'id' to a number
-      console.log("ID = " + this.id);
     });
   }
 
@@ -95,27 +95,24 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       this.totalTime = 0; // Clear timing
       this.forLoop = 0;
       this.whileLoop = 0;
-      console.log("Num of line break = " + arrayofLines.length);
       for (var i = 0; i < arrayofLines.length; i++) {
         this.log += `Line${i}: `;
         this.log += `${arrayofLines[i]}\n`;
         this.determineCmd(arrayofLines[i], this.stack, this.timeStack);
       }
-      console.log("Num of command: " + this.stack.length);
 
       if (this.forLoop == 1) {
         this.graph.for_loop_cmd_found(this.stack, this.timeStack);
-      }
-
-      if (this.whileLoop == 1) {
+      } else if (this.whileLoop == 1) {
         this.graph.while_loop_cmd_found(this.stack, this.timeStack);
+      } else {
+        this.graph.receiveCmd1(this.stack, this.timeStack);
       }
     }
   }
 
 
   reset(): void {
-    console.log("reset function from hero-form");
     eval("this.graph.reset();");
   }
 
@@ -138,7 +135,6 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
   moveBackward(): void {
     eval("this.graph.moveBackward(75, 500);")
   }
-
 
   private determineCmd(line: string, cmdStack: string[], timeStack: number[]): void {
     var value;
@@ -180,7 +176,6 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       var initial_num = value.slice(0, value.indexOf(";"));
       value = value.slice(value.indexOf("<") + 1);
       var condition_num = value.slice(0, value.indexOf(";"));
-      console.log("initial num=" + initial_num + " | condition_num=" + condition_num);
       cmdStack.push("for-loop-start:(" + initial_num + "," + condition_num + ")");
       this.forLoop = 1;
     }
@@ -188,31 +183,25 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       // Matches While Loop
       var value = line.substr((line.indexOf("(") + 1));
       var initial_num = value.slice(0, value.indexOf(")"));
-      console.log("while loop found value:" + initial_num);
       this.whileLoop = 1;
     }
   }
 
   public scenarioParser(code: string): number {
     code = code.replace(/\s/g, '');
-    console.log(code);
     if (code.includes("while(steps<target_distance")) {
-      console.log("Inside scenario 2D!");
       var value = code.slice((code.indexOf("target_distance=") + 16), code.indexOf("target_distance=") + 20);
       value = value.replace(/\D/g, '');
-      console.log("Value = " + value);
       this.graph.scenario2D(value / 27);
       return 0;
     }
     else if (code.includes(`while(front_sensor>front_threshold){robot.moveForward(`) ||
       code.includes(`while(frontSensor>frontThreshold){robot.moveForward(`)) {
-      console.log("Inside scenario 3B");
       if (code.match(/frontThreshold/g)) {
         var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
       } else if (code.match(/front_threshold/g)) {
         var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
       }
-      console.log("Scenario 3B Value = " + value);
 
       this.graph.scenario3B(value);
       return 0;
@@ -221,39 +210,31 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       code.includes(`while(true){if(frontSensor<frontThreshold){robot.moveBackward(`) ||
       code.includes(`while(true){if(front_sensor>front_threshold){robot.moveForward(`) ||
       code.includes(`while(true){if(frontSensor>frontThreshold){robot.moveForward(`)) {
-      console.log("Inside scenario 3C!");
       if (code.match(/frontThreshold/g)) {
         var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
       } else if (code.match(/front_threshold/g)) {
         var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
       }
-      console.log("Scenario 3C Value = " + value);
 
       this.graph.scenario3C(value);
       return 0;
     }
     else if (code.includes(`while(true){if(front_sensor<front_threshold){robot.turnRight()`) ||
       code.includes(`while(true){if(frontSensor<frontThreshold){robot.turnRight()`)) {
-      console.log("Inside scenario 3D!");
       if (code.match(/frontThreshold/g)) {
         var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
       } else if (code.match(/front_threshold/g)) {
         var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
       }
-      console.log("Scenario 3D Value = " + value);
       this.graph.scenario3D(value);
       return 0;
     }
     else if (code.includes(`while(true){if(side_sensor>side_threshold){robot.turnRight()robot.moveForward`) ||
       code.includes(`while(true){if(sideSensor>sideThreshold){robot.turnRight()robot.moveForward`)) {
-      console.log("Inside right wall follower!");
       this.graph.finalScenario();
       return 0;
     } else {
       return 1;
     }
   }
-
-
-
 }
