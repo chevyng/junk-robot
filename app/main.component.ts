@@ -1,5 +1,5 @@
-import { Component, OnInit, ElementRef, OnChanges,
-         AfterViewInit, ViewChild, AfterContent } from '@angular/core';
+import { Component, OnInit, ElementRef,
+         AfterViewInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { GraphComponent } from './graph.component';
@@ -19,7 +19,7 @@ import 'codemirror/mode/javascript/javascript';
   templateUrl: 'main.component.html',
   styleUrls: ['main.component.css']
 })
-export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterContent {
+export class MainComponent implements OnInit, AfterViewInit {
   @ViewChild(GraphComponent) graph: GraphComponent;
 
   id: number;
@@ -44,6 +44,7 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       this.loadCount++;
     });
   }
+  /* CodeMirror config */
   config = {
     lineNumbers: true,
     mode: {
@@ -54,15 +55,14 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     indentUnit: 4
   };
   code = dummyCodes.sampleCode;
-  submitted = false;
-  onSubmit() { this.submitted = true; }
+
   resetForm() {
-    this.code = `reset!`;
+    this.code = ``;
   }
 
   ngOnInit() {
     this.sub = this.route.params.subscribe(params => {
-      this.id = +params['id']; // (+) converts string 'id' to a number
+      this.id = +params['id'];
     });
   }
 
@@ -72,6 +72,7 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     this.graph.turnRight();
   }
 
+  /* This function adds the corresponding maze layout to the empty maze */
   reloadMaze(id) {
     if (this.id == 1) { var maze = mazeMap.mazes.maze1; var mazeGoal = mazeEnd.maze1.goal; var mazeGoalName = mazeEnd.maze1.name; }
     else if (this.id == 2) { var maze = mazeMap.mazes.maze2; var mazeGoal = mazeEnd.maze2.goal; var mazeGoalName = mazeEnd.maze2.name; }
@@ -84,8 +85,7 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     eval("this.graph.drawMaze(maze,mazeGoal,mazeGoalName);");
   }
 
-  log = '';
-
+  /* This function parses the user's code */
   public parseCodeInput(value: string): void {
     //ScenarioParser returns 1 if it doesn't match any of the scenario
     if (this.scenarioParser(value) == 1) {
@@ -106,7 +106,7 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       } else if (this.whileLoop == 1) {
         this.graph.while_loop_cmd_found(this.stack, this.timeStack);
       } else {
-        this.graph.receiveCmd1(this.stack, this.timeStack);
+        this.graph.receiveCmd(this.stack, this.timeStack);
       }
     }
   }
@@ -136,6 +136,7 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     eval("this.graph.moveBackward(75, 500);")
   }
 
+  /* This function determines the user's command and adds it to the stack */
   private determineCmd(line: string, cmdStack: string[], timeStack: number[]): void {
     var value;
     var cmdStringStart = "parent.";
@@ -187,6 +188,8 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     }
   }
 
+  /* This function determines if the user's code contains the code to solve
+     the scenario/tutorial */
   public scenarioParser(code: string): number {
     code = code.replace(/\s/g, '');
     if (code.includes("while(steps<target_distance")) {
@@ -198,9 +201,9 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     else if (code.includes(`while(front_sensor>front_threshold){robot.moveForward(`) ||
       code.includes(`while(frontSensor>frontThreshold){robot.moveForward(`)) {
       if (code.match(/frontThreshold/g)) {
-        var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
+        var value = code.slice((code.indexOf("frontThreshold=") + 15), (code.indexOf("frontThreshold=") + 17));
       } else if (code.match(/front_threshold/g)) {
-        var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
+        var value = code.slice((code.indexOf("front_threshold=") + 16), (code.indexOf("front_threshold=") + 18));
       }
 
       this.graph.scenario3B(value);
@@ -211,9 +214,9 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
       code.includes(`while(true){if(front_sensor>front_threshold){robot.moveForward(`) ||
       code.includes(`while(true){if(frontSensor>frontThreshold){robot.moveForward(`)) {
       if (code.match(/frontThreshold/g)) {
-        var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
+        var value = code.slice((code.indexOf("frontThreshold=") + 15), (code.indexOf("frontThreshold=") + 17));
       } else if (code.match(/front_threshold/g)) {
-        var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
+        var value = code.slice((code.indexOf("front_threshold=") + 16), (code.indexOf("front_threshold=") + 18));
       }
 
       this.graph.scenario3C(value);
@@ -222,9 +225,9 @@ export class MainComponent implements OnInit, OnChanges, AfterViewInit, AfterCon
     else if (code.includes(`while(true){if(front_sensor<front_threshold){robot.turnRight()`) ||
       code.includes(`while(true){if(frontSensor<frontThreshold){robot.turnRight()`)) {
       if (code.match(/frontThreshold/g)) {
-        var value = code.slice((code.indexOf("frontThreshold=") + 15), code.indexOf("frontThreshold=") + 17));
+        var value = code.slice((code.indexOf("frontThreshold=") + 15), (code.indexOf("frontThreshold=") + 17));
       } else if (code.match(/front_threshold/g)) {
-        var value = code.slice((code.indexOf("front_threshold=") + 16), code.indexOf("front_threshold=") + 18));
+        var value = code.slice((code.indexOf("front_threshold=") + 16), (code.indexOf("front_threshold=") + 18));
       }
       this.graph.scenario3D(value);
       return 0;

@@ -72,6 +72,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.drawMaze(mazeMap.mazes.emptyMaze);
   }
 
+ /* Initialise the variables */
   private setup(): void {
     var w = 940;
     var h = 640;
@@ -93,6 +94,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.crash = 0;
   }
 
+  /* Draws the maze and robot */
   public draw(): void {
     this.svg = d3.select(this.el.nativeElement).select("div")
       .append("svg")
@@ -166,6 +168,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       .attr("r", function(d) { return d.radius; })
       .style("fill", "black");
 
+    /* Insert robot sensors */
     var sensors = this.svg.append("g")
       .attr("class", "sensors");
 
@@ -199,6 +202,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     this.robot.attr("transform", "translate(" + (0 + this.xGap) + "," + ((this.scale * 3) + this.yGap) + ")")
 
+    /* Formats the graph coordinates  */
     function formatLength(d) {
       let ticks = x.ticks();
       return d === ticks[ticks.length - 1]
@@ -206,6 +210,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         : d;
     }
 
+    /* Dimensions for the front sensor */
     function frontSensorRange() {
       return `
         M 25,0
@@ -216,6 +221,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       `;
     }
 
+    /* Dimensions for the front sensor */
     function sideSensorRange() {
       return `
         M 80, 20
@@ -226,6 +232,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       `;
     }
 
+  /* Determine the maze layout to draw */
   private map_maze(maze): void {
     var totalLines = maze.length;
     this.linesName = new Array(totalLines);
@@ -234,6 +241,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  /* Draw the maze and maze's end goal */
   public drawMaze(maze, mazeGoal, mazeGoalName): void {
     var endmazes = this.svg.append("g")
       .attr("class", "end-maze")
@@ -261,6 +269,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.map_maze(maze);
   }
 
+  /* Update Robot coordinates when turning left or right */
   private updateRobot(value: number): void {
     if (this.angle == 360 || this.angle == -360) {
       this.angle = 0;
@@ -351,6 +360,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.update_frontSensor(front, side);
   }
 
+  /* Function that makes the robot turn 90 degree to the right */
   public turnRight(): void {
     this.checkPosition();
     var rotate = this.angle;
@@ -370,10 +380,10 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         return "translate(" + x + "," + y + ") rotate(" + i(t) + "," + 40 + "," + 50 + ")";
       }
     }
-
     this.prevCmd = "turnRight";
   }
 
+  /* Function that makes the robot turn 90 degree to the right */
   public turnLeft(): void {
     this.checkPosition();
     var rotate = this.angle;
@@ -396,6 +406,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.prevCmd = "turnLeft";
   }
 
+  /* Reset the robot to original start position */
   public reset(): void {
     this.angle = 0;
     this.direction = 1;
@@ -407,6 +418,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.turnRight();
   }
 
+  /* Funciton to stop the robot */
   public stopRobot(): void {
     this.crash = 1;
   }
@@ -418,6 +430,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
   // Row > 4 -> (yCoord + 25)
   // Col < 1 -> (xCoord - 25)
   // Col > 6 -> (xCoord + 25)
+  /*  Function that move the robot straight (Called by forward and backward functions) */
   private move(duration: number, front: number, side: number): void {
     //Default 1s if none is provided
     if (duration == null) { duration = 1000; console.log("Why am i here"); }
@@ -451,9 +464,13 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.check_maze_complete(row, col);
   }
 
+  /* Function to move the robot backwards.
+     Value = pixels to move robot backward by
+     Duration = Duration of animation  */
   public moveBackward(value: number, duration: number): void {
-
     this.check_frontSensor();
+
+    /* Check current direction of robot to apply necessary offset to coordinates*/
     if (this.angle == 0) {
       this.yCoord += value;
       if (this.yCoord > (this.scale * 4 - robotDimension.base.height)) {
@@ -476,6 +493,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
+    /* Check previous command applied to robot and apply necessary offset to coordinates */
     if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
       if (this.direction == 2) {
         this.xCoord += 90;
@@ -488,9 +506,11 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         this.yCoord += 90;
       }
     }
+
+    /* Check robot current coordinates and apply necessary offset
+       to update the front and side sensors correctly */
     var front = this.check_obstacle(1);
     var side = this.check_obstacle(2);
-
     if (this.direction == 1) {
       front = this.yCoord - front;
       side = side - (this.xCoord + 80);
@@ -504,13 +524,19 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       front = this.xCoord - front;
       side = (this.yCoord - 80) - side;
     }
+
+    /* Calls the function that moves the robot and update sensors value */
     this.move(duration, front, side);
     this.prevCmd = "moveBackward";
   }
 
+  /* Function to move the robot forwards.
+     Value = pixels to move robot forward by
+     Duration = Duration of animation  */
   public moveForward(value: number, duration: number): void {
     var crash = 0;
-
+    /* Checks if the robot will crash by calculating the
+       front sensor reading and distance to move */
     if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
       if (value >= this.front_sensor_reading) {
         value = this.front_sensor_reading;
@@ -518,8 +544,11 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
+    /* Checks the robot front sensor reading */
     if (this.front_sensor_reading != 0) { this.check_frontSensor(); }
 
+    /* Checks if the robot will crash by calculating the
+       front sensor reading and distance to move */
     if (this.prevCmd != "turnRight" || this.prevCmd != "turnLeft") {
       if (value >= this.front_sensor_reading) {
         if (this.front_sensor_reading == value) {
@@ -533,6 +562,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     }
 
+    /* Check current direction of robot to apply necessary offset to coordinates*/
     if (this.direction == 1) {
       this.yCoord -= value;
     } else if (this.angle == 90 || this.angle == -270) {
@@ -543,6 +573,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       this.xCoord -= value
     }
 
+    /* Check previous command applied to robot and apply necessary offset to coordinates */
     if (this.prevCmd == "turnRight" || this.prevCmd == "turnLeft") {
       if (this.angle == 90 || this.angle == -270) {
         this.xCoord += 90;
@@ -556,6 +587,8 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       }
     }
 
+    /* Check robot current coordinates and apply necessary offset
+       to update the front and side sensors correctly */
     var front = this.check_obstacle(1);
     var side = this.check_obstacle(2);
     if (this.direction == 1) {
@@ -577,8 +610,11 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       this.crash = crash;
     }
 
+    /* Calls the funciton that moves the robot and update sensors value */
     this.move(duration, front, side);
     this.update_frontSensor(front, side);
+
+    /* If the robot crashes, display an alert and reset the robot */
     if (crash) {
       swal({
         title: 'Oh no :(',
@@ -595,10 +631,9 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     this.prevCmd = "moveForward";
   }
 
-  //Problem is after moving forward or backward when facing ESW
-  //The coordinates are not accurate due to the added coordinates
-  //that was added when the robot was facing either E/S/W
-  // When facing East, extra (90,10) was added
+  /* Function that checks the coordinates of the robot and apply
+     the necessary offset depending on previous command and current
+     direction */
   private checkPosition(): void {
     if ((this.prevCmd == "moveForward" || this.prevCmd == "moveBackward")
       && this.direction == 2) { // East
@@ -615,6 +650,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  /* Check and updates the front and side sensors value */
   public check_frontSensor(): void {
     if (this.direction == 1) {
       this.front_sensor_reading = this.yCoord - this.check_obstacle(1);
@@ -630,11 +666,13 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  /* Updates front and side sensor values */
   private update_frontSensor(front: number, side: number): void {
     this.front_sensor_reading = front;
     this.side_sensor_reading = side;
   }
 
+  /* Check if the robot reaches the end goal and display an alert */
   private check_maze_complete(row: number, col: number): boolean {
     if (this.mazeGoalName != undefined) {
       if (this.mazeGoalName.includes("R" + row + "C" + col)) {
@@ -650,6 +688,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  /* Checks the current column that robot is currently in */
   private check_maze_col(x): void {
     var col;
     if (x >= 0 && x <= (this.scale)) { col = 1; }
@@ -662,6 +701,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     return col;
   }
 
+  /* Checks the current row that robot is currently in */
   private check_maze_row(y): void {
     var row;
     if (y >= 0 && y <= (this.scale)) { row = 1; }
@@ -671,6 +711,10 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
 
     return row;
   }
+
+  /* Check if there is any obstacle from the robot's current position
+     and returns the coordinates of the obstacle which will be used
+     to calculate the front and side sensors value */
   private check_obstacle(sensor: number): number { // Front sensor = 1, Side Sensor = 2
     var x = this.xCoord;
     var y = this.yCoord;
@@ -711,7 +755,6 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       if (row == 2) {
         if (this.linesName.indexOf(current_line) > -1) { return (this.scale * 3); }
         else { return (this.scale * 4); }
-          else if (this.linesName.indexOf(second_line) > - 1) { return (this.scale * 4); }
       }
       if (row == 1) {
         if (this.linesName.indexOf(current_line) > -1) { return (this.scale); }
@@ -802,38 +845,37 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  /* Receive the commands from parser and execute it
+     *Commands that are not nested inside a for/while loop */
   public receiveCmd(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
+
+    /* Recursion function to execute the commands */
     function recursion(cmdStack, timeStack, i): void {
       eval(cmdStack[i]);
       i += 1;
       if (i >= cmdStack.length || parent.crash == 1) { return; };
-
       setTimeout(function() { recursion(cmdStack, timeStack, i); }, timeStack[i - 1]);
     }
 
     recursion(cmdStack, timeStack, 0);
   }
 
+  /* Receive the commands that are nested within a for loop and execute it */
   public for_loop_cmd_found(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
-    console.log("CmdStack size=" + cmdStack.length);
     var initial_num;
     var condition_num;
     for (var i = 0; i < cmdStack.length; i++) {
-      console.log("command[" + i + "]: " + cmdStack[i]);
       if (cmdStack[i].match(/for-loop-start/g) != null) {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
         initial_num = value.slice(0, value.indexOf(","));
         condition_num = value.slice(value.indexOf(",") + 1, value.indexOf(")"));
-        console.log("For loop-> initial_num:" + initial_num + " | condition:" + condition_num);
         cmdStack.splice(i, 1);
       }
     }
 
-    for (var i = 0; i < cmdStack.length; i++) {
-      console.log("new command[" + i + "]: " + cmdStack[i] + " | time:" + timeStack[i]);
-    }
+    /* Receive the commands that are nested within a for loop and execute it */
     function recursion(cmdStack, timeStack, i, j): void {
       eval(cmdStack[j]);
       i += 1;
@@ -846,6 +888,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(cmdStack, timeStack, parseInt(initial_num), 0);
   }
 
+  /* Receive the commands that are nested within a while loop and execute it */
   public while_loop_cmd_found(cmdStack: string[], timeStack: number[]): void {
     var parent = this;
     for (var i = 0; i < cmdStack.length; i++) {
@@ -853,9 +896,9 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
         var value = cmdStack[i].substr((cmdStack[i].indexOf("(") + 1));
         cmdStack.splice(i, 1);
       }
-
     }
 
+    /* Recursion function to execute the commands the correct number of times */
     function recursion(cmdStack, timeStack, i, j): void {
       eval(cmdStack[j]);
       i += 1;
@@ -868,16 +911,19 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(cmdStack, timeStack, 0, 0);
   }
 
+  /* Scenario 2D/Tutorial Q1 code */
   public scenario2D(distance: number): void {
     this.moveForward(distance, distance * 30);
   }
 
+  /* Scenario 3B/Tutorial Q2 code */
   public scenario3B(front_threshold_value: number): void {
     this.front_threshold = front_threshold_value;
     var distance = this.front_sensor_reading - this.front_threshold;
     this.moveForward(distance, distance * 30);
   }
 
+  /* Scenario 3C/Tutorial Q3 code */
   public scenario3C(front_threshold_value: number): void {
     var parent = this;
     parent.front_threshold = front_threshold_value;
@@ -900,6 +946,7 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
     recursion(200, 0);
   }
 
+  /* Scenario 3D/Tutorial Q4 code */
   public scenario3D(front_threshold_value: number): void {
     var parent = this;
     parent.front_threshold = front_threshold_value;
@@ -915,13 +962,12 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       scenario3Di();
       i += 1;
       if (i >= num || parent.crash == 1) { return; }
-
       setTimeout(function() { recursion(num, i); }, 1000);
     }
-
     recursion(300, 0);
   }
 
+  /* Final scenario/Tutorial Q5 code */
   public finalScenario(): void {
     var parent = this;
     function rightWallFollower(): void {
@@ -942,10 +988,8 @@ export class GraphComponent implements OnInit, OnChanges, AfterViewInit {
       rightWallFollower();
       i += 1;
       if (i >= num || parent.crash == 1) { return; };
-
       setTimeout(function() { recursion(num, i); }, 1750);
     }
-
     recursion(200, 0);
   }
 
